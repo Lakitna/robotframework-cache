@@ -57,8 +57,9 @@ A04 Resets the cache file when fetching and the cache file is not json
 *** Keywords ***
 Create Cache File With Content
     [Arguments]    ${file_name}    ${key_value_pairs}
-    ${future_date} =  FakerLibrary.Future Date
-    ${future_date} =  Evaluate    $future_date.isoformat()
+    ${future_date} =  Evaluate
+    ...  (datetime.datetime.now() + datetime.timedelta(days=1)).isoformat()
+    ...  modules=datetime
 
     ${cache_entries} =  Create Dictionary
     FOR    ${key}  ${value}    IN    &{key_value_pairs}
