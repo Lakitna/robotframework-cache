@@ -30,7 +30,7 @@ jobs:
           python-version: '${{ matrix.python-version }}'
           cache: poetry
       - name: Poetry install
-        run: poetry install
+        run: poetry install --with dev
 
       - name: Integration tests - robot
         run: poetry run robot test/integration
