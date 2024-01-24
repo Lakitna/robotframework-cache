@@ -16,7 +16,8 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ["3.8", "3.10", "3.11", "3.x"]
+        python-version: ["3.8", "3.10", "3.x"]
+        robot-version: ["~5", "~6", "~7"]
 
     steps:
       - name: Checkout
@@ -31,6 +32,8 @@ jobs:
           cache: poetry
       - name: Poetry install
         run: poetry install --with dev
+      - name: Install robotframework ${{ matrix.robot-version }}
+        run: poetry add robotframework=${{ matrix.robot-version }}
 
       - name: Integration tests - robot
         run: poetry run robot test/integration
