@@ -33,16 +33,16 @@ jobs:
         run: poetry install
 
       - name: Integration tests - robot
-        run: robot test/integration
+        run: poetry run robot test/integration
       - name: Integration tests - pabot suitelevel
-        run: pabot --pabotlib test/integration
+        run: poetry run pabot --pabotlib test/integration
       - name: Integration tests - pabot testlevel
-        run: pabot --testlevelsplit --pabotlib test/integration
+        run: poetry run pabot --testlevelsplit --pabotlib test/integration
 
       - name: Acceptance tests - robot
-        run: robot test/acceptance/run.robot
+        run: poetry run robot test/acceptance/run.robot
       - name: Acceptance tests - pabot suitelevel
-        run: pabot --pabotlib test/acceptance/run.robot
+        run: poetry run pabot --pabotlib test/acceptance/run.robot
       - name: Acceptance tests - pabot testlevel
-        run: pabot --testlevelsplit --pabotlib test/acceptance/run.robot
+        run: poetry run pabot --testlevelsplit --pabotlib test/acceptance/run.robot
 
