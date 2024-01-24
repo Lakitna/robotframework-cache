@@ -69,7 +69,7 @@ Create Cache File With Content
         Set To Dictionary    ${cache_entries}    ${key}=${entry}
     END
 
-    ${cache_file_content} =     Evaluate    json.dumps($cache_entries)    modules=json
+    ${cache_file_content} =     Evaluate    json.dumps(${cache_entries})    modules=json
     Create File    ${file_name}    ${cache_file_content}
 
 
