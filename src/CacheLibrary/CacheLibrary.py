@@ -136,7 +136,7 @@ class CacheLibrary:
 
         |    Cache Store Value    user-session    ${session_token}    expire_in_seconds=60
         """
-        with self._lock("cache-library-edit"):
+        with self._lock("cachelib-edit"):
             cache = self._open_cache_file()
 
             expires = (datetime.now() + timedelta(seconds=expire_in_seconds)).isoformat()
@@ -147,7 +147,6 @@ class CacheLibrary:
 
             cache[key] = cache_entry
             self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, cache)
-            self.pabotlib.get_parallel_value_for_key(self.parallel_value_key)
         self._store_json_file(self.file_path, cache)
 
     def cache_remove_value(self, key: CacheKey) -> None:
@@ -162,7 +161,7 @@ class CacheLibrary:
 
         |    Cache Remove Value    user-session
         """
-        with self._lock("cache-library-edit"):
+        with self._lock("cachelib-edit"):
             cache = self._open_cache_file()
 
             if key not in cache.keys():
@@ -176,7 +175,7 @@ class CacheLibrary:
         """
         Remove all values from the cache.
         """
-        with self._lock("cache-library-edit"):
+        with self._lock("cachelib-edit"):
             self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, {})
         self._store_json_file(self.file_path, {})
 
