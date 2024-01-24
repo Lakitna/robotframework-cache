@@ -1,0 +1,13 @@
+.venv
+__pycache__
+dist
+
+# Robotframework generated files
+log.html
+output.xml
+report.html
+.pabotsuitenames
+pabot_results
+
+# RoboCache generated files
+robotframework-cache.json
