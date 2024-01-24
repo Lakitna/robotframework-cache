@@ -4,7 +4,7 @@ Library             FakerLibrary
 Library             pabot.PabotLib
 Library             CacheLibrary
 
-# Prevent the random data created by these tests to interfere with other tests
+# Clean up the random data created by these tests
 Suite Setup         Run Only Once    Cache Reset
 Suite Teardown      Run On Last Process    Cache Reset
 

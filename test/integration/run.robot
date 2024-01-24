@@ -2,15 +2,15 @@
 Library             Process
 Library             FakerLibrary
 Library             pabot.PabotLib
-Library             CacheLibrary    file_size_warning=5
+Library             CacheLibrary
 
-# Prevent the random data created by these tests to interfere with other tests
+# Clean up the random data created by these tests
 Suite Setup         Run Only Once    Cache Reset
 Suite Teardown      Run On Last Process    Cache Reset
 
 *** Variables ***
-${iterations}       10
-@{supportedPrimitives}
+${ITERATIONS}       50
+@{SUPPORTED_PRIMITIVES}
 ...  str
 ...  bool
 ...  int
@@ -18,8 +18,8 @@ ${iterations}       10
 
 *** Test Cases ***
 Store and retrieve random string data
-    FOR    ${i}    IN RANGE    ${iterations}
-        ${len} =    FakerLibrary.Pyint    min_value=1    max_value=200
+    FOR    ${i}    IN RANGE    ${ITERATIONS}
+        ${len} =    FakerLibrary.Pyint    min_value=1    max_value=100
         ${key} =    FakerLibrary.Pystr    min_chars=${len}    max_chars=${len}
         ${input} =    FakerLibrary.Pystr    min_chars=${len}    max_chars=${len}
         Cache Store value    ${key}    ${input}
@@ -29,16 +29,18 @@ Store and retrieve random string data
     END
 
 Store and retrieve random int data
-    FOR    ${i}    IN RANGE    ${iterations}
+    FOR    ${i}    IN RANGE    ${ITERATIONS}
+        ${len} =    FakerLibrary.Pyint    min_value=1    max_value=100
+        ${key} =    FakerLibrary.Pystr    min_chars=${len}    max_chars=${len}
         ${input} =    FakerLibrary.Pyint
-        Cache Store value    random-int    ${input}
+        Cache Store value    ${key}    ${input}
 
-        ${retrieved} =    Cache Retrieve value    random-int
+        ${retrieved} =    Cache Retrieve value    ${key}
         Should Be Equal    ${retrieved}    ${input}
     END
 
 Store and retrieve random float data
-    FOR    ${i}    IN RANGE    ${iterations}
+    FOR    ${i}    IN RANGE    ${ITERATIONS}
         ${input} =    FakerLibrary.Pyfloat
         Cache Store value    random-float    ${input}
 
@@ -47,8 +49,8 @@ Store and retrieve random float data
     END
 
 Store and retrieve random dict data
-    FOR    ${i}    IN RANGE    ${iterations}
-        ${input} =    FakerLibrary.Pydict    value_types=${supportedPrimitives}
+    FOR    ${i}    IN RANGE    ${ITERATIONS}
+        ${input} =    FakerLibrary.Pydict    value_types=${SUPPORTED_PRIMITIVES}
         Cache Store value    random-dict    ${input}
 
         ${retrieved} =    Cache Retrieve value    random-dict
@@ -56,8 +58,8 @@ Store and retrieve random dict data
     END
 
 Store and retrieve random list data
-    FOR    ${i}    IN RANGE    ${iterations}
-        ${input} =    FakerLibrary.Pylist    value_types=${supportedPrimitives}
+    FOR    ${i}    IN RANGE    ${ITERATIONS}
+        ${input} =    FakerLibrary.Pylist    value_types=${SUPPORTED_PRIMITIVES}
         Cache Store value    random-list    ${input}
 
         ${retrieved} =    Cache Retrieve value    random-list
