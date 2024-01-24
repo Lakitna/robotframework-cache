@@ -11,15 +11,14 @@ A01 Fetches cache from file
     ${cache} =  Create Dictionary    some-string-value=Lorum ipsum dolor sit amet conscuer
     Create Cache File With Content    ${file_cache_path}    ${cache}
 
-    Run Test File With Robot    fetch-and-assert-from-file.robot
+    Run Test File With Robot    A01.robot
 
     [Teardown]    Remove File    ${file_cache_path}
 
 A02 Creates a new cache file if it does not exist
-    # TODO: Unique cache files for each test
-    ${file_cache_path} =  Set Variable    robocache-A-add.json
+    ${file_cache_path} =  Set Variable    robocache-A02.json
 
-    Run Test File With Robot    add-to-cache.robot
+    Run Test File With Robot    A02.robot
 
     File Should Exist    ${file_cache_path}
     ${contents} =   Get File    ${file_cache_path}
@@ -29,11 +28,11 @@ A02 Creates a new cache file if it does not exist
     [Teardown]    Remove File    ${file_cache_path}
 
 A03 Resets the cache file when adding and the cache file is not json
-    ${file_cache_path} =  Set Variable    robocache-A-add.json
+    ${file_cache_path} =  Set Variable    robocache-A03.json
 
     Create File    ${file_cache_path}    <this> is #not# json!
 
-    Run Test File With Robot    add-to-cache.robot
+    Run Test File With Robot    A03.robot
 
     File Should Exist    ${file_cache_path}
     ${contents} =   Get File    ${file_cache_path}
@@ -43,11 +42,11 @@ A03 Resets the cache file when adding and the cache file is not json
     [Teardown]    Remove File    ${file_cache_path}
 
 A04 Resets the cache file when fetching and the cache file is not json
-    ${file_cache_path} =  Set Variable    robocache-A-read.json
+    ${file_cache_path} =  Set Variable    robocache-A04.json
 
     Create File    ${file_cache_path}    <this> is #not# json!
 
-    Run Test File With Robot    fetch-from-file.robot
+    Run Test File With Robot    A04.robot
 
     File Should Exist    ${file_cache_path}
     ${contents} =   Get File    ${file_cache_path}

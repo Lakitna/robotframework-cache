@@ -1,5 +1,5 @@
 *** Settings ***
-Library    CacheLibrary    robocache-A-add.json
+Library    CacheLibrary    robocache-A02.json
 
 *** Test Cases ***
 Fetches data from file
