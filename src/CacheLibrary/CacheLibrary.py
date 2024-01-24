@@ -251,7 +251,8 @@ class CacheLibrary:
 
     def _open_cache_file(self) -> CacheContents:
         shared_cache = self.pabotlib.get_parallel_value_for_key(self.parallel_value_key)
-        if isinstance(shared_cache, dict) and len(shared_cache) > 0:
+        # If not set, `shared_cache` will be an empty string.
+        if isinstance(shared_cache, dict):
             return shared_cache
 
         cache_file_contents = self._read_json_file(self.file_path)
