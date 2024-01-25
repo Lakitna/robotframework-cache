@@ -69,10 +69,10 @@ class CacheLibrary:
     """
     parallel_value_key = "robotframework-cache"
 
-    def __init__(self, file_path="robotframework-cache.json", file_size_warning=512000):
+    def __init__(self, file_path="robotframework-cache.json", file_size_warning_bytes=500000):
         self.pabotlib = PabotLib()
         self.file_path = file_path
-        self.file_size_warning = file_size_warning
+        self.file_size_warning_bytes = file_size_warning_bytes
 
     def cache_retrieve_value(self, key: CacheKey) -> CacheValue:
         """
@@ -257,7 +257,7 @@ class CacheLibrary:
         cache_file_contents = self._read_json_file(self.file_path)
 
         file_size = os.stat(self.file_path).st_size
-        if file_size > self.file_size_warning:
+        if file_size > self.file_size_warning_bytes:
             logger.warn(
                 f"Large cache file '{self.file_path}'. File is {round(file_size / 1024, 1)}Kb. "
                 + "There might be an issue with the caching mechanism."
