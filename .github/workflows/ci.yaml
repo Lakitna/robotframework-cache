@@ -31,7 +31,7 @@ jobs:
           python-version: '${{ matrix.python-version }}'
           cache: poetry
       - name: Poetry install
-        run: poetry install --with dev
+        run: poetry install --with test
       - name: Install robotframework ${{ matrix.robot-version }}
         run: poetry add robotframework=${{ matrix.robot-version }}
 
