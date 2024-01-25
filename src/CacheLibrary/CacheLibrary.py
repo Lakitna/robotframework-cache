@@ -1,12 +1,13 @@
-import os
 import json
+import os
+from contextlib import contextmanager
 from datetime import datetime, timedelta
+from typing import Dict, List, TypedDict, Union
+
 from robot.api import logger
 from robot.libraries.BuiltIn import BuiltIn
 from pabot.pabotlib import PabotLib
 from robot.api.deco import library
-from typing import Dict, List, TypedDict, Union
-from contextlib import contextmanager
 
 
 CacheKey = str
@@ -181,8 +182,6 @@ class CacheLibrary:
 
     def run_keyword_and_cache_output(self, keyword: str, *args, expire_in_seconds=3600) -> CacheValue:
         """
-        TODO: Should we keep?
-
         If possible, return the keyword's output from cache.
 
         If the value is not stored in cache, run the keyword instead. Then store it's output in

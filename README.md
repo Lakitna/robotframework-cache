@@ -17,6 +17,38 @@ our workflow when writing tests.
 CacheLibrary solves these problems by providing a caching mechanism that's stored both in memory and
 in a file.
 
+## Pabot
+
+CacheLibrary works with Pabot, but requires the `--pabotlib` command line argument.
+
+Supporting Pabot is achieved by a combination of [locks](https://pabot.org/PabotLib.html#locks)
+and [parallel variables](https://pabot.org/PabotLib.html#valuetransfer). This makes CacheLibrary
+stable when run in parallel without losing stored values.
+
+All CacheLibrary tests are run with Pabot to ensure that the above statements are true.
+
+## Installation
+
+1. Install CacheLibrary with pip. Run the following command:
+
+    ```shell
+    pip install robotframework-cache
+    ```
+
+2. Import it from your `.robot` or `.resource` file. Add the following line to the `Settings`
+    section:
+
+    ```robotframework
+    Library    CacheLibrary
+    ```
+
+3. Add the cache file to `.gitignore`. If you use the default file path, add the following to your
+    `.gitignore`:
+
+    ```plain
+    robotframework-cache.json
+    ```
+
 ## Examples
 
 ### Basic usage
@@ -24,12 +56,12 @@ in a file.
 Store a value, and retrieve it later
 
 ```robotframework
-    Cache Store Value    foo    Hello, world
+Cache Store Value    foo    Hello, world
 
-    # Do something interesting
+# Do something interesting
 
-    ${value} =    Cache Retrieve Value    foo
-    Should Be Equal    ${value}    Hello, world
+${value} =    Cache Retrieve Value    foo
+Should Be Equal    ${value}    Hello, world
 ```
 
 ### Caching output of a keyword
@@ -56,43 +88,74 @@ Get Api Session Token
     RETURN    ${new_token}
 ```
 
-## Installation
+Alternatively, you can use the convenience keyword `Run Keyword And Cache Output` to do the same
+thing:
 
-1. Install CacheLibrary with pip
+```robotframework
+Get Api Session Token
+    ${token} =    Run Keyword And Cache Output    Get Api Session Token Uncached
+    RETURN    ${token}
 
-    ```shell
-    pip install robotframework-cache
-    ```
+Get Api Session Token Uncached
+    [Tags]    robot:private
 
-2. Import it from your `.robot` or `.resource` file.
+    # Request a new session token
 
-    ```robotframework
-    Library    CacheLibrary
-    ```
+    RETURN    ${new_token}
+```
 
-3. Add the cache file to `.gitignore`. If you use the defaults, add the following to your
-    `.gitignore`:
+### Retention of cached values
 
-    ```plain
-    robotframework-cache.json
-    ```
+When storing a value in the cache, you also define how long it should remain valid.
 
-## Pabot
+```robotframework
+Cache Store Value    key=amazing    value=beautiful    expire_in_seconds=10
+```
 
-CacheLibrary works with Pabot, but does require the `--pabotlib` command line argument.
+The value `beautiful` will expire 10 seconds from the moment it's stored.
 
-Supporting Pabot is achieved by a combination of [locks](https://pabot.org/PabotLib.html#locks)
-and [parallel variables](https://pabot.org/PabotLib.html#valuetransfer). This makes CacheLibrary
-stable when run in parallel without losing stored values.
+If you try to retrieve an expired value with `Cache Retrieve Value` it will return `None` like it
+would if it was never stored.
 
-All CacheLibrary tests are run with Pabot to ensure that the above statements are true.
+The default retention is 3600 seconds (1 hour).
+
+### Changing the cache file path
+
+When importing the library, you can provide an alternative cache file path.
+
+```robotframework
+Library    CacheLibrary    file_path=alternative-cache-file.json
+```
+
+### Cache too big warnings
+
+A big cache file can indicate an issue with CacheLibary or with how it's used. To help you spot
+these issues, CacheLibrary will warn you if the cache file is very big. By default it will warn if
+the file is larger than 500Kb.
+
+You can change this threshold when importing the library. For example, changing it to 1Mb:
+
+```robotframework
+Library    CacheLibrary    file_size_warning_bytes=1000000
+```
+
+## Resetting the cache
+
+If you need to reset the cache for any reason, simply remove or empty the cache file
+(default: `robotframework-cache.json`).
+
+Alternatively, you can use the keyword `Cache Reset` for the same purpose.
+
+## Contributing
+
+Contributions are always welcome :)
 
 ## Testing CacheLibrary
 
 1. Install the dependencies with `poetry`.
 
     ```shell
-    poetry install --with dev
+    poetry install --with test
     ```
 
 2. Run the following commands in the repository root.
