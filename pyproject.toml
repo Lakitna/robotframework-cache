@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "robotframework-cache"
-version = "1.0.0"
+version = "1.0.1"
 description = "Robot Framework libary for caching values across tests and test runs"
 authors = ["Sander van Beek <lakitna@gmail.com>"]
 license = "MIT"
