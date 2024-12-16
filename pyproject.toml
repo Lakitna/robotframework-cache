@@ -10,16 +10,16 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = ">=3.8"
-robotframework = ">=5.0.1,<8.0.0"
-robotframework-pabot = "~2"
+python = ">=3.10"
+robotframework = ">=5.0.1"
+robotframework-pabot = ">2"
 
 [tool.poetry.group.test]
 optional = true
 
 [tool.poetry.group.test.dependencies]
 robotframework-faker = "^5.0.0"
-setuptools = "^69.0.3"
+setuptools = "^75.6.0"
 
 [build-system]
 requires = ["poetry-core"]
