@@ -19,7 +19,7 @@ optional = true
 
 [tool.poetry.group.test.dependencies]
 robotframework-faker = "^5.0.0"
-setuptools = "^75.6.0"
+setuptools = ">=75.6,<79.0"
 
 [build-system]
 requires = ["poetry-core"]
