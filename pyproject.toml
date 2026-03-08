@@ -16,7 +16,7 @@ requires-python = ">=3.10"
 dependencies = [
     "click (>=8.1.7,<9.0.0)",
     "robotframework (>=5.0.1)",
-    "robotframework-pabot (>=2)",
+    "robotframework-pabot (>=2.0.0)",
 ]
 
 [dependency-groups]
@@ -24,7 +24,8 @@ dev = [
     "ruff (>=0.9.1,<0.10.0)",
     "robotframework-robocop (>=7.0.0,<8.0.0)",
     "robotframework-faker (>=5.0.0)",
-    "invoke>=2.2.1",
+    "invoke (>=2.2.1)",
+    "setuptools (>=82.0.0)",
 ]
 
 [tool.uv.build-backend]

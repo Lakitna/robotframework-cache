@@ -17,6 +17,7 @@ jobs:
       matrix:
         python-version: ["3.10", "3.12", "3.14"]
         dependency-resolution: ["lowest-direct", "highest"]
+      fail-fast: false
     env:
       UV_RESOLUTION: ${{ matrix.dependency-resolution }}
 
