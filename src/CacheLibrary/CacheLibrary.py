@@ -40,12 +40,16 @@ class CacheLibrary:
 
     = Pabot =
 
-    CacheLibrary supports Pabot, but requires the `--pabotlib` command line option.
+    CacheLibrary works with Pabot.
+
+    - Pabot @ <2.2.0 is not supported
+    - Pabot @ >=2.2.0 and <4 requires the `--pabotlib` command line argument.
+    - Pabot @ >=4 won't work with the `--no-pabotlib` command line argument.
 
     CacheLibrary will even keep its cool when you run many tests that constantly write to the cache.
     To achieve this, only one test can write to the cache at a time. This does mean that your tests
-    will slow down when you constantly write to the cache. CacheLibrary is a write-once, read-often
-    solution.
+    will slow down when you constantly write to the cache. CacheLibrary works best when you
+    write sometimes and read often.
 
     = Examples =
 
@@ -92,6 +96,10 @@ class CacheLibrary:
         file_path: str = "robotframework-cache.json",
         file_size_warning_bytes: int = 500000,
     ) -> None:
+        """
+        | `file_path` | Path to the cache file. Relative to where Robot Frameworks working directory |
+        | `file_size_warning_bytes` | Log warning when the cache exceeds this size |
+        """  # noqa: D205, E501
         self.pabotlib = PabotLib()
         self.file_path = Path(file_path)
         self.file_size_warning_bytes = file_size_warning_bytes
