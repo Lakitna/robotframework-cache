@@ -1,26 +1,84 @@
-[tool.poetry]
+[project]
 name = "robotframework-cache"
 version = "1.0.1"
 description = "Robot Framework libary for caching values across tests and test runs"
-authors = ["Sander van Beek <lakitna@gmail.com>"]
-license = "MIT"
 readme = "README.md"
-packages = [
-    { include = "CacheLibrary", from = "src" }
+authors = [{ name = "Sander van Beek" }]
+license = "MIT"
+license-files = ["LICENSE"]
+classifiers = [
+    "Framework :: Robot Framework",
+    "Framework :: Robot Framework :: Library",
+    "Development Status :: 5 - Production/Stable",
+    "Typing :: Typed",
+]
+requires-python = ">=3.10"
+dependencies = ["robotframework (>=5.0.1)", "robotframework-pabot (>=2.2.0)"]
+
+[dependency-groups]
+dev = [
+    "ruff (>=0.9.1,<0.10.0)",
+    "robotframework-robocop (>=7.0.0,<8.0.0)",
+    "robotframework-faker (>=5.0.0)",
+    "invoke (>=2.2.1)",
+    # Required for faker <6.0.0
+    "setuptools (>=80.0.0,<81.0.0)",
 ]
 
-[tool.poetry.dependencies]
-python = ">=3.10"
-robotframework = ">=5.0.1"
-robotframework-pabot = ">2"
+[tool.uv.build-backend]
+module-name = "CacheLibrary"
 
-[tool.poetry.group.test]
-optional = true
-
-[tool.poetry.group.test.dependencies]
-robotframework-faker = "^5.0.0"
-setuptools = ">=75.6,<79.0"
+[project.urls]
+Homepage = "https://github.com/Lakitna/robotframework-cache"
+Repository = "https://github.com/Lakitna/robotframework-cache"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv_build>=0.10.8,<0.11.0"]
+build-backend = "uv_build"
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
+norecursedirs = ['robot', 'src', 'test/projects']
+python_files = ['test/**/*.py']
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "FIX", # flake8-fixme. Superseeded by TD
+
+    # Ruleset: flake8-annotations
+    "ANN201",
+
+    # Ruleset: pydocstyle
+    # Docstring presence
+    "D100",
+    "D107", # Prefer class docstring over __init__ docstring
+    # Docstring contents
+    "D200",
+    "D203",
+    "D212", # conflicts with D213
+    "D400",
+    "D415",
+
+    # Ruleset: tryceratops
+    "TRY003",
+
+    # Ruleset: flake8-todos
+    "TD002", # Use issue code instead
+
+    # Ruleset: perflint
+    "PERF401", # Readability > micro performance
+
+    # Ruleset: flake8-datetimez
+    "DTZ005", # Not relevant for this project
+
+    # Ruleset: pep8-naming
+    "N999", # Not always relevant for Robot Libraries
+]
+
+[tool.ruff.lint.per-file-ignores]
+"test/**" = ['D101', 'D102', 'INP001']
+"./tasks.py" = ['T201', 'D103']

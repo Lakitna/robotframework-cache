@@ -78,7 +78,7 @@ Run Test File With Robot
     ${path} =  Normalize Path    ${CURDIR}/test/${path}
 
     ${result} =  Run Process
-    ...    robot --output NONE --log NONE --report NONE ${path}
+    ...    uv run robot --output NONE --log NONE --report NONE ${path}
     ...    shell=${True}
 
     IF  ${result.rc} != 0

@@ -2,50 +2,49 @@ name: robotframework-cache CI
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        python-version: ["3.10", "3.12", "3.x"]
-        robot-version: ["~5", "~6", "~7"]
+        python-version: ["3.10", "3.12", "3.14"]
+        dependency-resolution: ["lowest-direct", "highest"]
+      fail-fast: false
+    env:
+      UV_RESOLUTION: ${{ matrix.dependency-resolution }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install poetry
-        run: pipx install poetry
-      - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.0.0
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
         with:
-          python-version: '${{ matrix.python-version }}'
-          cache: poetry
-      - name: Poetry install
-        run: poetry install --with test
-      - name: Install robotframework ${{ matrix.robot-version }}
-        run: poetry add robotframework=${{ matrix.robot-version }}
+          python-version: ${{ matrix.python-version }}
 
-      - name: Integration tests - robot
-        run: poetry run robot test/integration
-      - name: Integration tests - pabot suitelevel
-        run: poetry run pabot --pabotlib test/integration
-      - name: Integration tests - pabot testlevel
-        run: poetry run pabot --testlevelsplit --pabotlib test/integration
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
 
-      - name: Acceptance tests - robot
-        run: poetry run robot test/acceptance/run.robot
-      - name: Acceptance tests - pabot suitelevel
-        run: poetry run pabot --pabotlib test/acceptance/run.robot
-      - name: Acceptance tests - pabot testlevel
-        run: poetry run pabot --testlevelsplit --pabotlib test/acceptance/run.robot
+      - name: Install dependencies
+        run: |
+          uv sync --dev
+          uv tree --depth 1 --no-dev
 
+      - name: Lint
+        run: |
+          uv run invoke lint
+
+      - name: Test
+        run: |
+          uv run invoke test

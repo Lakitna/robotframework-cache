@@ -35,23 +35,23 @@ All CacheLibrary tests are run with Pabot to ensure that the above statements ar
 
 1. Install CacheLibrary with pip. Run the following command:
 
-    ```shell
-    pip install robotframework-cache
-    ```
+   ```shell
+   pip install robotframework-cache
+   ```
 
 2. Import it from your `.robot` or `.resource` file. Add the following line to the `Settings`
-    section:
+   section:
 
-    ```robotframework
-    Library    CacheLibrary
-    ```
+   ```robotframework
+   Library    CacheLibrary
+   ```
 
 3. Add the cache file to `.gitignore`. If you use the default file path, add the following to your
-    `.gitignore`:
+   `.gitignore`:
 
-    ```plain
-    robotframework-cache.json
-    ```
+   ```plain
+   robotframework-cache.json
+   ```
 
 ## Examples
 
@@ -158,19 +158,12 @@ Contributions are always welcome :)
 
 1. Install the dependencies with `poetry`.
 
-    ```shell
-    poetry install --with test
-    ```
+   ```shell
+   uv sync --with dev
+   ```
 
-2. Run the following commands in the repository root.
+2. Run the following command in the repository root.
 
-    ```shell
-    robot test/integration
-    robot test/acceptance/run.robot
-
-    pabot --pabotlib test/integration
-    pabot --pabotlib test/acceptance/run.robot
-
-    pabot --testlevelsplit --pabotlib test/integration
-    pabot --testlevelsplit --pabotlib test/acceptance/run.robot
-    ```
+   ```shell
+   uv run invoke test
+   ```
