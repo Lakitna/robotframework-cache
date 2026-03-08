@@ -76,8 +76,8 @@ def test(c: Context):
             test_integration_sync,
             test_integration_parallel_suite_level,
             test_integration_parallel_test_level,
-            test_acceptance_parallel_test_level,
-            test_acceptance_parallel_test_level,
+            test_acceptance_sync,
+            test_acceptance_parallel_suite_level,
             test_acceptance_parallel_test_level,
         ),
     )
@@ -159,8 +159,8 @@ ns = Collection(
     test_integration_parallel_suite_level,
     test_integration_parallel_test_level,
     test_acceptance,
-    test_acceptance_parallel_test_level,
-    test_acceptance_parallel_test_level,
+    test_acceptance_sync,
+    test_acceptance_parallel_suite_level,
     test_acceptance_parallel_test_level,
 )
 ns.configure(
