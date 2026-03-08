@@ -58,7 +58,7 @@ def build_source(c: Context):
 
 @task
 def build_docs(c: Context):
-    c.run("uv run libdoc src/CacheLibrary docs/keywords.html")
+    c.run("uv run libdoc src/CacheLibrary docs/index.html")
 
 
 ##########
