@@ -39,4 +39,4 @@ Only runs the keyword once when called twice without arg
 Add One To Number
     [Arguments]    ${input}
     ${output} =  Evaluate    int(${input}) + int(1)
-    [Return]    ${output}
+    RETURN  ${output}
