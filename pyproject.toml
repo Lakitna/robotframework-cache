@@ -13,10 +13,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 requires-python = ">=3.10"
-dependencies = [
-    "robotframework (>=6.0.0)",
-    "robotframework-pabot (>=2.0.0)",
-]
+dependencies = ["robotframework (>=5.0.0)", "robotframework-pabot (>=3.0.0)"]
 
 [dependency-groups]
 dev = [
