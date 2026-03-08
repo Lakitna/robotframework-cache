@@ -46,6 +46,7 @@ def build(c: Context):
             lint,
             test,
             build_source,
+            build_docs,
         ),
     )
 
@@ -53,6 +54,11 @@ def build(c: Context):
 @task
 def build_source(c: Context):
     c.run("uv build --clear")
+
+
+@task
+def build_docs(c: Context):
+    c.run("uv run libdoc src/CacheLibrary docs/keywords.html")
 
 
 ##########
@@ -142,6 +148,7 @@ def test_acceptance_parallel_test_level(c: Context):
 ns = Collection(
     build,
     build_source,
+    build_docs,
     set_version,
     set_version_pyproject,
     set_version_python,

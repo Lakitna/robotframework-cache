@@ -21,8 +21,8 @@ in a file.
 
 CacheLibrary works with Pabot.
 
-- Pabot @ <=1 is not supported
-- Pabot @ >=2 and <4 requires the `--pabotlib` command line argument.
+- Pabot @ <2.2.0 is not supported
+- Pabot @ >=2.2.0 and <4 requires the `--pabotlib` command line argument.
 - Pabot @ >=4 won't work with the `--no-pabotlib` command line argument.
 
 Supporting Pabot is achieved by a combination of [locks](https://pabot.org/PabotLib.html#locks)
