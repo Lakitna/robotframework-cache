@@ -311,7 +311,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "robotframework", specifier = ">=5.0.1" },
-    { name = "robotframework-pabot", specifier = ">=2.0.0" },
+    { name = "robotframework-pabot", specifier = ">=2.2.0" },
 ]
 
 [package.metadata.requires-dev]
