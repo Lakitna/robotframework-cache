@@ -25,7 +25,7 @@ dev = [
     "robotframework-robocop (>=7.0.0,<8.0.0)",
     "robotframework-faker (>=5.0.0)",
     "invoke (>=2.2.1)",
-    "setuptools (>=82.0.0)",
+    "setuptools (>=81.0.0,<82.0.0)",
 ]
 
 [tool.uv.build-backend]

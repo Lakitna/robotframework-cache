@@ -47,4 +47,4 @@ jobs:
 
       - name: Test
         run: |
-          uv run --with setuptools invoke test
+          uv run invoke test
