@@ -1,7 +1,7 @@
 # Robot Framework Cache Library
 
 Caching mechanism for Robot Framework tests. Works within a single test run and across multiple test
-runs. Works with Pabot, though it requires `--pabotlib`.
+runs. Works with Pabot (requires `--pabotlib`).
 
 ## Why
 
@@ -80,7 +80,7 @@ token every time you run a test. This can be a great help while making or debugg
 
 ```robotframework
 Get Api Session Token
-    ${cache_key} =    Set Variable    api-session
+    VAR  ${cache_key} =    api-sessions
     ${cached_token} =    Cache Retrieve value    ${cache_key}
     IF    $cached_token is not $None
         RETURN    ${cached_token}

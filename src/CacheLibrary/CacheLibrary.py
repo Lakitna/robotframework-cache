@@ -77,7 +77,7 @@ class CacheLibrary:
     request the session token every time when you're making/debugging a test.
 
     | Get Api Session Token
-    |     ${cache_key} =    Set Variable    api-session
+    |     VAR  ${cache_key} =    api-sessions
     |     ${cached_token} =    Cache Retrieve value    ${cache_key}
     |     IF    $cached_token is not $None
     |         RETURN    ${cached_token}
