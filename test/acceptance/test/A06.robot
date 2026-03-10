@@ -1,5 +1,5 @@
 *** Settings ***
-Library     CacheLibrary    robocache-A06.json    expire_in_seconds=86400
+Library     CacheLibrary    robocache-A06.json    default_expire_in_seconds=86400
 
 
 *** Test Cases ***

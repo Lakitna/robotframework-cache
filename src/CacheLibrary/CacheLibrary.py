@@ -3,7 +3,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, TypeAlias, TypedDict
+from typing import Any, Literal, TypeAlias, TypedDict
 
 from pabot.pabotlib import PabotLib
 from robot.api import logger
@@ -27,7 +27,6 @@ class CacheEntry(TypedDict):
 
 
 CacheContents: TypeAlias = dict[CacheKey, CacheEntry]
-
 
 KwName: TypeAlias = str
 KwArgs: TypeAlias = Any
@@ -95,14 +94,17 @@ class CacheLibrary:
         self,
         file_path: str = "robotframework-cache.json",
         file_size_warning_bytes: int = 500000,
+        default_expire_in_seconds: int = 3600,
     ) -> None:
         """
-        | `file_path` | Path to the cache file. Relative to where Robot Frameworks working directory |
-        | `file_size_warning_bytes` | Log warning when the cache exceeds this size |
+        | `file_path`                      | Path to the cache file. Relative to where Robot Frameworks working directory                   |
+        | `file_size_warning_bytes`        | Log warning when the cache exceeds this size                                                   |
+        | `default_expire_in_seconds=3600` | After how many seconds should a stored value expire. Can be overwritten when a value is stored |
         """  # noqa: D205, E501
         self.pabotlib = PabotLib()
         self.file_path = Path(file_path)
         self.file_size_warning_bytes = file_size_warning_bytes
+        self.default_expire_in_seconds = default_expire_in_seconds
 
     @keyword
     def cache_retrieve_value(self, key: CacheKey) -> CacheValue | None:
@@ -138,7 +140,7 @@ class CacheLibrary:
         self,
         key: CacheKey,
         value: CacheValue,
-        expire_in_seconds: int = 3600,
+        expire_in_seconds: int | Literal["default"] = "default",
     ) -> None:
         """
         Store a value in the cache.
@@ -153,9 +155,9 @@ class CacheLibrary:
         - Dictionary
         - List
 
-        | `key`                    | Name of the value to be stored                 |
-        | `value`                  | Value to be stored                             |
-        | `expire_in_seconds=3600` | After how many seconds the value should expire |
+        | `key`                       | Name of the value to be stored                 |
+        | `value`                     | Value to be stored                             |
+        | `expire_in_seconds=default` | After how many seconds the value should expire |
 
         = Examples =
 
@@ -163,7 +165,7 @@ class CacheLibrary:
 
         Store a value in the cache
 
-        |    Cache Store Value    user-session    ${session_token}
+        |   Cache Store Value    user-session    ${session_token}
 
         --------------------
 
@@ -171,8 +173,11 @@ class CacheLibrary:
 
         Store a value in the cache and set it to expire in 1 minute
 
-        |    Cache Store Value    user-session    ${session_token}    expire_in_seconds=60
+        |   Cache Store Value    user-session    ${session_token}    expire_in_seconds=60
         """
+        if expire_in_seconds == "default":
+            expire_in_seconds = self.default_expire_in_seconds
+
         with self._lock("cachelib-edit"):
             cache = self._open_cache_file()
 
@@ -197,7 +202,7 @@ class CacheLibrary:
 
         Remove a value from the cache
 
-        |    Cache Remove Value    user-session
+        |  Cache Remove Value    user-session
         """
         with self._lock("cachelib-edit"):
             cache = self._open_cache_file()
@@ -223,7 +228,7 @@ class CacheLibrary:
         self,
         keyword: KwName,
         *args: KwArgs,
-        expire_in_seconds: int = 3600,
+        expire_in_seconds: int | Literal["default"] = "default",
     ) -> CacheValue:
         """
         If possible, return the keyword's output from cache.
@@ -235,9 +240,9 @@ class CacheLibrary:
         to create incorrect caching behavior. You can easily create two keyword calls that
         functionally do the same thing, but are considered different for caching purposes.
 
-        | `keyword`                | The keyword that to be run                     |
-        | `*args`                  | Arguments send to the keyword                  |
-        | `expire_in_seconds=3600` | After how many seconds the value should expire |
+        | `keyword`                | The keyword that to be run                        |
+        | `*args`                  | Arguments send to the keyword                     |
+        | `expire_in_seconds=default` | After how many seconds the value should expire |
 
         = Examples =
 
@@ -245,7 +250,7 @@ class CacheLibrary:
 
         Wrap a keyword with Run Keyword And Cache Output to cache its output.
 
-        |    ${session_token} =    Run Keyword And Cache Output    Get API Session Token
+        |  ${session_token} =    Run Keyword And Cache Output    Get API Session Token
 
         --------------------
 
@@ -253,7 +258,7 @@ class CacheLibrary:
 
         Wrap a keyword that requires arguments.
 
-        |    ${user_session_token} =    Run Keyword And Cache Output    Login User    ${username}    ${password}
+        |  ${user_session_token} =    Run Keyword And Cache Output    Login User    ${username}    ${password}
 
         --------------------
 
@@ -261,7 +266,8 @@ class CacheLibrary:
 
         Wrap a keyword that requires arguments and set it to expire in 1 minute
 
-        |    ${user_session_token} =    Run Keyword And Cache Output    Login User    ${username}    ${password}    expire_in_seconds=60
+        |  ${user_session_token} =    Run Keyword And Cache Output
+        |  ...  Login User    ${username}    ${password}    expire_in_seconds=60
 
         --------------------
 
@@ -316,6 +322,7 @@ class CacheLibrary:
                 cache_contents[key] = entry
 
         self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, cache_contents)
+
         self._store_json_file(self.file_path, cache_contents)
         return cache_contents
 
