@@ -29,7 +29,7 @@ def set_version_pyproject(c: Context, version: str):
 def set_version_python(_: Context, version: str):
     print("Update version in __version__.py")
 
-    version_file_path = Path("./src/robotframework_cache/__version__.py")
+    version_file_path = Path("./src/CacheLibrary/__version__.py")
     with version_file_path.open(mode="w") as f:
         f.write(f'__version__ = "{version}"\n')
 
