@@ -121,7 +121,8 @@ The value `beautiful` will expire 10 seconds from the moment it's stored.
 If you try to retrieve an expired value with `Cache Retrieve Value` it will return `None` like it
 would if it was never stored.
 
-The default retention is 3600 seconds (1 hour).
+The default retention is 3600 seconds (1 hour). You can change this default when importing the
+library.
 
 ### Changing the cache file path
 

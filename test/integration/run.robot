@@ -8,13 +8,15 @@ Library             CacheLibrary
 Suite Setup         Run Only Once    Cache Reset
 Suite Teardown      Run On Last Process    Cache Reset
 
+
 *** Variables ***
-${ITERATIONS}       50
+${ITERATIONS}               50
 @{SUPPORTED_PRIMITIVES}
-...  str
-...  bool
-...  int
-...  float
+...                         str
+...                         bool
+...                         int
+...                         float
+
 
 *** Test Cases ***
 Store and retrieve random string data
@@ -68,20 +70,20 @@ Store and retrieve random list data
 
 Store and retrieve specific characters and keywords that break some implementations
     ${set} =    Create List
-    ...  ${True}
-    ...  ${False}
-    ...  ${EMPTY}
-    ...  "
-    ...  '
-    ...  `
-    ...  (
-    ...  )
-    ...  {
-    ...  }
-    ...  [
-    ...  ]
-    ...  :
-    ...  ,
+    ...    ${True}
+    ...    ${False}
+    ...    ${EMPTY}
+    ...    "
+    ...    '
+    ...    `
+    ...    (
+    ...    )
+    ...    {
+    ...    }
+    ...    [
+    ...    ]
+    ...    :
+    ...    ,
 
     FOR    ${i}    ${input}    IN ENUMERATE    @{set}
         Cache Store value    set    ${input}
@@ -103,3 +105,12 @@ Remove stored data
     Should Not Be Equal    ${preRemove}    ${postRemove}
     Should Be Equal    ${preRemove}    amazing data
     Should Be Equal    ${postRemove}    ${None}
+
+Store with expiration time
+    Cache Store Value    random-data    amazing data    expire_in_seconds=1
+    ${preSleep} =    Cache Retrieve Value    random-data
+    Sleep    2s
+    ${postSleep} =    Cache Retrieve Value    random-data
+
+    Should Not Be Equal    ${preSleep}    ${None}
+    Should Be Equal    ${postSleep}    ${None}
