@@ -82,7 +82,7 @@ A06 Overwrites default expiration time during import
 
     File Should Exist    ${file_cache_path}
     ${contents} =    Get File    ${file_cache_path}
-    ${cache_content} =    Evaluate    json.loads($contents)    modules=json
+    ${cache_content} =    Evaluate    json.loads('${contents}')    modules=json
 
     ${expires_date} =    Set Variable    ${cache_content['foo']['expires']}
     ${expires_date} =    DateTime.Convert Date    ${expires_date}
@@ -90,7 +90,7 @@ A06 Overwrites default expiration time during import
     ${expires_in} =    DateTime.Subtract Date From Date    ${expires_date}    ${now}    result_format=number
 
     Should Be True
-    ...    ${{ $expires_in > $DEFAULT_EXPIRES_IN_SECONDS }}
+    ...    ${{ ${expires_in} > ${DEFAULT_EXPIRES_IN_SECONDS} }}
     ...    msg=Expiration time should be greater than default expiration time | Expected ${expires_in} to be greater than ${DEFAULT_EXPIRES_IN_SECONDS}
 
     [Teardown]    Remove File    ${file_cache_path}
@@ -99,7 +99,7 @@ A06 Overwrites default expiration time during import
 *** Keywords ***
 Create Cache File With Content
     [Arguments]    ${file_name}    ${key_value_pairs}    ${expiration}=${None}
-    IF    $expiration is $None
+    IF    '${expiration}' == '${None}'
         ${expiration} =    Evaluate
         ...    (datetime.datetime.now() + datetime.timedelta(days=1)).isoformat()
         ...    modules=datetime
