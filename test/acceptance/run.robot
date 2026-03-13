@@ -8,6 +8,7 @@ Library     FakerLibrary
 
 *** Variables ***
 ${DEFAULT_EXPIRES_IN_SECONDS}       ${3600}
+${EMPTY_CACHE}                      \{"COLLECTION": \{\}, "VALUE": \{\}\}
 
 
 *** Test Cases ***
@@ -56,7 +57,7 @@ A04 Resets the cache file when fetching and the cache file is not json
 
     File Should Exist    ${file_cache_path}
     ${contents} =    Get File    ${file_cache_path}
-    Should Be Equal    ${contents}    \{\}
+    Should Be Equal    ${contents}    ${EMPTY_CACHE}
 
     [Teardown]    Remove File    ${file_cache_path}
 
@@ -71,7 +72,7 @@ A05 Removes expired values from the cache file
 
     File Should Exist    ${file_cache_path}
     ${contents} =    Get File    ${file_cache_path}
-    Should Be Equal    ${contents}    \{\}
+    Should Be Equal    ${contents}    ${EMPTY_CACHE}
 
     [Teardown]    Remove File    ${file_cache_path}
 
@@ -84,7 +85,7 @@ A06 Overwrites default expiration time during import
     ${contents} =    Get File    ${file_cache_path}
     ${cache_content} =    Evaluate    json.loads('${contents}')    modules=json
 
-    ${expires_date} =    Set Variable    ${cache_content['foo']['expires']}
+    ${expires_date} =    Set Variable    ${cache_content['VALUE']['foo']['expires']}
     ${expires_date} =    DateTime.Convert Date    ${expires_date}
     ${now} =    DateTime.Get Current Date
     ${expires_in} =    DateTime.Subtract Date From Date    ${expires_date}    ${now}    result_format=number
@@ -113,7 +114,8 @@ Create Cache File With Content
         Set To Dictionary    ${cache_entries}    ${key}=${entry}
     END
 
-    ${cache_file_content} =    Evaluate    json.dumps(${cache_entries})    modules=json
+    ${cache} =    Create Dictionary    VALUE=${cache_entries}
+    ${cache_file_content} =    Evaluate    json.dumps(${cache})    modules=json
     Create File    ${file_name}    ${cache_file_content}
 
 Run Test File With Robot
