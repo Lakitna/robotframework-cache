@@ -1,4 +1,5 @@
 import json
+import random
 from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
@@ -15,6 +16,8 @@ from .__version__ import __version__
 
 CacheKey: TypeAlias = str
 CacheValue: TypeAlias = str | bool | int | float | list | dict
+CacheValueType: TypeAlias = Literal["COLLECTION", "VALUE"]
+CACHE_VALUE_TYPES: tuple[CacheValueType, ...] = ("COLLECTION", "VALUE")
 
 
 class CacheEntry(TypedDict):
@@ -26,7 +29,7 @@ class CacheEntry(TypedDict):
     expires: str
 
 
-CacheContents: TypeAlias = dict[CacheKey, CacheEntry]
+CacheContents: TypeAlias = dict[CacheValueType, dict[CacheKey, CacheEntry]]
 
 KwName: TypeAlias = str
 KwArgs: TypeAlias = Any
@@ -123,7 +126,7 @@ class CacheLibrary:
 
         |    ${session_token} =    Cache Retrieve Value    user-session
         """
-        cache = self._open_cache_file()
+        cache = self._open_cache_file()["VALUE"]
 
         if key not in cache:
             return None
@@ -134,6 +137,65 @@ class CacheLibrary:
             return None
 
         return entry["value"]
+
+    @keyword
+    def cache_retrieve_value_from_collection(
+        self,
+        key: CacheKey,
+        pick: Literal["first", "last", "random"] = "first",
+        remove_value: bool = True,  # noqa: FBT001, FBT002
+    ) -> CacheValue | None:
+        """
+        Retrieve a value from a cached collection.
+
+        Will return a single value from a collection stored in the cache, or `None` if there is no
+        value.
+
+        | `key`               | Name of the collection |
+        | `pick=first`        | How to pick a value from the collection |
+        | `remove_value=True` | Should the value be removed from the collection |
+
+        = Examples =
+
+        == Basic usage ==
+
+        Retrieve a value from a cached collection.
+
+        |    ${user} =    Cache Retrieve Value From Collection    user-accounts
+
+        TODO: More examples
+        """
+        cache = self._open_cache_file()["COLLECTION"]
+
+        if key not in cache:
+            return None
+
+        entry = cache[key]
+        if self._entry_is_expired(entry):
+            self.cache_remove_collection(key)
+            return None
+
+        values = entry["value"]
+        if not isinstance(values, list) or len(values) == 0:
+            self.cache_remove_collection(key)
+            return None
+
+        index = None
+        if pick == "first":
+            index = 0
+        elif pick == "last":
+            index = -1
+        elif pick == "random":
+            index = random.randint(0, len(values) - 1)  # noqa: S311
+        else:
+            msg = f"Unexpected pick '{pick}'. Expected one of 'first', 'last', or 'random'."
+            raise ValueError(msg)
+
+        value = values[index]
+        if remove_value:
+            self._cache_remove_collection_value(key, index)
+
+        return value
 
     @keyword
     def cache_store_value(
@@ -175,19 +237,89 @@ class CacheLibrary:
 
         |   Cache Store Value    user-session    ${session_token}    expire_in_seconds=60
         """
+        self._store_cache_entry(key, value, "VALUE", expire_in_seconds)
+
+    @keyword
+    def cache_store_collection(
+        self,
+        key: CacheKey,
+        *values: CacheValue,
+        expire_in_seconds: int | Literal["default"] = "default",
+    ):
+        """
+        Store a collection of values in the cache.
+
+        All values in the collection must be able to be stored in JSON. Supported values include
+        (but are not limited to):
+
+        - String
+        - Integer
+        - Float
+        - Boolean
+        - Dictionary
+        - List
+
+        | `key`                       | Name of the collection to be stored                      |
+        | `*values`                   | Values to be stored. Can be multiple.                    |
+        | `expire_in_seconds=default` | After how many seconds the full collection should expire |
+
+        = Examples =
+
+        == Basic usage ==
+
+        Store a collection of values in the cache
+
+        |   VAR  @{users} =    Henk    Harry    Herman
+        |   Cache Store Collection    usernames    @{usernames}
+
+        --------------------
+
+        == Control expiration ==
+
+        Store a collection of values in the cache and set them to expire in 1 minute. All values
+        will expire at the same time.
+
+        |   VAR  @{users} =    Henk    Harry    Herman
+        |   Cache Store Collection    usernames    @{usernames}    expire_in_seconds=60
+        """
+        self._store_cache_entry(key, list(values), "COLLECTION", expire_in_seconds)
+
+    def _store_cache_entry(
+        self,
+        key: CacheKey,
+        value: CacheValue,
+        value_type: CacheValueType,
+        expire_in_seconds: int | Literal["default"],
+    ) -> None:
         if expire_in_seconds == "default":
             expire_in_seconds = self.default_expire_in_seconds
 
+        expires = (datetime.now() + timedelta(seconds=expire_in_seconds)).isoformat()
+        cache_entry: CacheEntry = {
+            "value": value,
+            "expires": expires,
+        }
+
         with self._lock("cachelib-edit"):
             cache = self._open_cache_file()
+            cache[value_type][key] = cache_entry
 
-            expires = (datetime.now() + timedelta(seconds=expire_in_seconds)).isoformat()
-            cache_entry: CacheEntry = {
-                "value": value,
-                "expires": expires,
-            }
+            self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, cache)
+        self._store_json_file(self.file_path, cache)
 
-            cache[key] = cache_entry
+    def _cache_remove_collection_value(self, key: CacheKey, index: int) -> None:
+        with self._lock("cachelib-edit"):
+            cache = self._open_cache_file()
+            set_cache = cache["COLLECTION"]
+
+            if key not in set_cache:
+                return
+
+            values = set_cache[key]["value"]
+            if not isinstance(values, list):
+                return
+
+            values.pop(index)
             self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, cache)
         self._store_json_file(self.file_path, cache)
 
@@ -204,13 +336,37 @@ class CacheLibrary:
 
         |  Cache Remove Value    user-session
         """
+        self._remove_cache_entry(key, "VALUE")
+
+    @keyword
+    def cache_remove_collection(self, key: CacheKey) -> None:
+        """
+        Remove a collection from the cache.
+
+        Removes the entire collection, including all values.
+
+        | `key` | Name of the stored collection |
+
+        = Examples =
+
+        Remove a collection from the cache
+
+        |  Cache Remove Collection    test-users
+        """
+        self._remove_cache_entry(key, "COLLECTION")
+
+    def _remove_cache_entry(
+        self,
+        key: CacheKey,
+        value_type: CacheValueType,
+    ) -> None:
         with self._lock("cachelib-edit"):
             cache = self._open_cache_file()
 
-            if key not in cache:
+            if key not in cache[value_type]:
                 return
 
-            del cache[key]
+            del cache[value_type][key]
             self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, cache)
         self._store_json_file(self.file_path, cache)
 
@@ -219,9 +375,10 @@ class CacheLibrary:
         """
         Remove all values from the cache.
         """
+        empty_cache = self._ensure_complete_cache({})
         with self._lock("cachelib-edit"):
-            self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, {})
-        self._store_json_file(self.file_path, {})
+            self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, empty_cache)
+        self._store_json_file(self.file_path, empty_cache)
 
     @keyword
     def run_keyword_and_cache_output(
@@ -300,6 +457,11 @@ class CacheLibrary:
         self.cache_store_value(key, new_value, expire_in_seconds)
         return new_value
 
+    def _ensure_complete_cache(self, cache: CacheContents) -> CacheContents:
+        for value_type in CACHE_VALUE_TYPES:
+            cache.setdefault(value_type, {})
+        return cache
+
     def _open_cache_file(self) -> CacheContents:
         shared_cache = self.pabotlib.get_parallel_value_for_key(self.parallel_value_key)
         # If not set, `shared_cache` will be an empty string.
@@ -315,19 +477,19 @@ class CacheLibrary:
                 "There might be an issue with the caching mechanism.",
             )
 
-        # Filter out expired entries
-        cache_contents: CacheContents = {}
-        for key, entry in cache_file_contents.items():
-            if not self._entry_is_expired(entry):
-                cache_contents[key] = entry
+        cache_contents: CacheContents = self._ensure_complete_cache({})
+        for value_type, contents in cache_file_contents.items():
+            for key, entry in contents.items():
+                if self._entry_is_expired(entry):
+                    continue
+                cache_contents[value_type][key] = entry
 
         self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, cache_contents)
-
         self._store_json_file(self.file_path, cache_contents)
         return cache_contents
 
     def _read_json_file(self, path: Path) -> CacheContents:
-        with self._lock(f"file-{path}"):
+        with self._lock(f"cachelib-file-{path}"):
             try:
                 with path.open("r", encoding="utf8") as f:
                     return json.load(f)
@@ -335,12 +497,13 @@ class CacheLibrary:
                 raise
             except Exception:  # noqa: BLE001
                 # Reset/create the file
+                empty_cache = self._ensure_complete_cache({})
                 with path.open("w", encoding="utf8") as f:
-                    f.write("{}")
-                return {}
+                    json.dump(empty_cache, f)
+                return empty_cache
 
     def _store_json_file(self, path: Path, contents: CacheContents) -> None:
-        with self._lock(f"file-{path}"), path.open("w", encoding="utf8") as f:
+        with self._lock(f"cachelib-file-{path}"), path.open("w", encoding="utf8") as f:
             return json.dump(contents, f)
 
     def _entry_is_expired(self, entry: CacheEntry) -> bool:
