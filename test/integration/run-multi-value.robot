@@ -225,17 +225,17 @@ Generate Complex Collection
     ${types} =    FakerLibrary.Random Elements    ${types}    length=${size}
 
     FOR    ${type}    IN    @{types}
-        IF    $type == 'str'
+        IF    '${type}' == 'str'
             ${val} =    FakerLibrary.Pystr
-        ELSE IF    $type == 'int'
+        ELSE IF    '${type}' == 'int'
             ${val} =    FakerLibrary.Pyint
-        ELSE IF    $type == 'float'
+        ELSE IF    '${type}' == 'float'
             ${val} =    FakerLibrary.Pyfloat
-        ELSE IF    $type == 'bool'
+        ELSE IF    '${type}' == 'bool'
             ${val} =    FakerLibrary.Pybool
-        ELSE IF    $type == 'list'
+        ELSE IF    '${type}' == 'list'
             ${val} =    FakerLibrary.Pylist    value_types=${SUPPORTED_PRIMITIVES}
-        ELSE IF    $type == 'dict'
+        ELSE IF    '${type}' == 'dict'
             ${val} =    FakerLibrary.Pydict    value_types=${SUPPORTED_PRIMITIVES}
         ELSE
             Fail    Unsupported type '${type}'
