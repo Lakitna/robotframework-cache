@@ -191,7 +191,7 @@ Store and retrieve random float data
         Should Be Equal    ${retrieved}    ${value_set}[${i}]
     END
 
-Store and retrieve random dict sdata
+Store and retrieve random dict data
     ${value_set} =    Create List
     FOR    ${i}    IN RANGE    ${ITERATIONS}
         ${input} =    FakerLibrary.Pydict    value_types=${SUPPORTED_PRIMITIVES}

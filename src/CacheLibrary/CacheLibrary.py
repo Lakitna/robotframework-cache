@@ -345,7 +345,7 @@ class CacheLibrary:
 
         |  ${session} =    Cache Retrieve Value From Collection    user-sessions    remove_value=${False}
         |  Cache Remove Value From Collection    user-sessions    value=${session}
-        """
+        """  # noqa: E501
         with self._lock("cachelib-edit"):
             cache = self._open_cache_file()
             collection_cache = cache["COLLECTION"]
@@ -371,13 +371,12 @@ class CacheLibrary:
         value: CacheValue | None = None,
     ) -> list[CacheValue]:
         if index is not None and value is not None:
-            msg = f"Got both index and value"
+            msg = "Got both index and value. Pick one. Can't use both at the same time."
             raise ValueError(msg)
 
         if index is not None:
             try:
                 col_values.pop(index)
-                return col_values
             except IndexError as e:
                 msg = (
                     "Could not remove value from collection. Index out of range. "
@@ -385,21 +384,24 @@ class CacheLibrary:
                     f"Expected index between 0 and {len(col_values) - 1}. "
                     f"{type(e).__name__}: {e}"
                 )
-                raise AssertionError(msg)
+                raise AssertionError(msg) from e
+            else:
+                return col_values
 
         if value is not None:
             try:
                 col_values.remove(value)
-                return col_values
             except ValueError as e:
                 msg = (
                     "Could not remove value from collection. Value not in collection. "
                     f"Value '{value}' does not exist in cache collection '{col_name}'. "
                     f"{type(e).__name__}: {e}"
                 )
-                raise AssertionError(msg)
+                raise AssertionError(msg) from e
+            else:
+                return col_values
 
-        msg = f"No index, no value"
+        msg = "No index and no value. I don't know what value to remove cached collection."
         raise ValueError(msg)
 
     @keyword(tags=["value"])
