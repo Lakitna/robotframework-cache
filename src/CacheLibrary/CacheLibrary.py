@@ -343,7 +343,7 @@ class CacheLibrary:
 
         Remove a value from a cached collection using the value. Must be the exact value.
 
-        |  ${session} =    Cache Retrieve Value From Collection    user-sessions
+        |  ${session} =    Cache Retrieve Value From Collection    user-sessions    remove_value=${False}
         |  Cache Remove Value From Collection    user-sessions    value=${session}
         """
         with self._lock("cachelib-edit"):
