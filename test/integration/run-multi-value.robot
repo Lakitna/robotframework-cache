@@ -11,12 +11,19 @@ Suite Teardown      Run On Last Process    Cache Reset
 
 
 *** Variables ***
-${ITERATIONS}               50
+${ITERATIONS}                   50
 @{SUPPORTED_PRIMITIVES}
-...                         str
-...                         bool
-...                         int
-...                         float
+...                             str
+...                             bool
+...                             int
+...                             float
+@{COMPLEX_COLLECTION_TYPES}
+...                             str
+...                             bool
+...                             int
+...                             float
+...                             list
+...                             dict
 
 
 *** Test Cases ***
@@ -35,6 +42,62 @@ Retrieve one value from set at a time
 
     ${retrieved_val} =    Cache Retrieve Value From Collection    set-data-${TEST_NAME}
     Should Be Equal As Integers    ${retrieved_val}    ${3}
+
+Remove value by index
+    ${value_set} =    Generate Complex Collection    size=${ITERATIONS}
+
+    Cache Store Collection    set-data-${TEST_NAME}    @{value_set}
+
+    ${bad_index} =    Evaluate    ${ITERATIONS} + 1
+    Run Keyword And Expect Error
+    ...    Could not remove value from collection. Index out of range. Index ${bad_index} does not exist in cache collection 'set-data-Remove value by index'. Expected index between 0 and ${{ ${ITERATIONS} - 1 }}. IndexError: pop index out of range
+    ...    Cache Remove Value From Collection
+    ...    set-data-${TEST_NAME}
+    ...    index=${bad_index}
+
+    FOR    ${value}    IN    @{value_set}
+        ${retrieved} =    Cache Retrieve Value From Collection
+        ...    set-data-${TEST_NAME}
+        ...    pick=first
+        ...    remove_value=False
+        Should Be Equal    ${retrieved}    ${value}
+
+        Cache Remove Value From Collection    set-data-${TEST_NAME}    index=0
+    END
+
+    # Should now be empty
+    ${retrieved} =    Cache Retrieve Value From Collection
+    ...    set-data-${TEST_NAME}
+    ...    remove_value=False
+    Should Be Equal    ${retrieved}    ${None}
+
+Remove value by value
+    ${value_set} =    Generate Complex Collection    size=${ITERATIONS}
+
+    Cache Store Collection    set-data-${TEST_NAME}    @{value_set}
+
+    ${bad_value} =    Set Variable    abcdefghijklmnopqrstuvwxyz
+    Run Keyword And Expect Error
+    ...    Could not remove value from collection. Value not in collection. Value '${bad_value}' does not exist in cache collection 'set-data-${TEST_NAME}'. ValueError: list.remove(x): x not in list
+    ...    Cache Remove Value From Collection
+    ...    set-data-${TEST_NAME}
+    ...    value=${bad_value}
+
+    FOR    ${value}    IN    @{value_set}
+        ${retrieved} =    Cache Retrieve Value From Collection
+        ...    set-data-${TEST_NAME}
+        ...    pick=first
+        ...    remove_value=False
+        Should Be Equal    ${retrieved}    ${value}
+
+        Cache Remove Value From Collection    set-data-${TEST_NAME}    value=${retrieved}
+    END
+
+    # Should now be empty
+    ${retrieved} =    Cache Retrieve Value From Collection
+    ...    set-data-${TEST_NAME}
+    ...    remove_value=False
+    Should Be Equal    ${retrieved}    ${None}
 
 Sets and values used together
     ${input} =    Evaluate    list(range(10))
@@ -153,3 +216,32 @@ Store and retrieve random list data
         ${retrieved} =    Cache Retrieve Value From Collection    random-lists    pick=first    remove_value=True
         Should Be Equal    ${retrieved}    ${value_set}[${i}]
     END
+
+
+*** Keywords ***
+Generate Complex Collection
+    [Arguments]    ${size}    ${types}=${COMPLEX_COLLECTION_TYPES}
+    ${collection} =    Create List
+    ${types} =    FakerLibrary.Random Elements    ${types}    length=${size}
+
+    FOR    ${type}    IN    @{types}
+        IF    $type == 'str'
+            ${val} =    FakerLibrary.Pystr
+        ELSE IF    $type == 'int'
+            ${val} =    FakerLibrary.Pyint
+        ELSE IF    $type == 'float'
+            ${val} =    FakerLibrary.Pyfloat
+        ELSE IF    $type == 'bool'
+            ${val} =    FakerLibrary.Pybool
+        ELSE IF    $type == 'list'
+            ${val} =    FakerLibrary.Pylist    value_types=${SUPPORTED_PRIMITIVES}
+        ELSE IF    $type == 'dict'
+            ${val} =    FakerLibrary.Pydict    value_types=${SUPPORTED_PRIMITIVES}
+        ELSE
+            Fail    Unsupported type '${type}'
+        END
+
+        Append To List    ${collection}    ${val}
+    END
+
+    RETURN    ${collection}
