@@ -277,7 +277,7 @@ class CacheLibrary:
 
         Store a collection of values in the cache
 
-        |  VAR  @{users} =    Henk    Harry    Herman
+        |  VAR  @{users} =    Alice    Bob    Pekka    Miikka
         |  Cache Store Collection    usernames    @{usernames}
 
         --------------------
@@ -287,7 +287,7 @@ class CacheLibrary:
         Store a collection of values in the cache and set them to expire in 1 minute. All values
         will expire at the same time.
 
-        |  VAR  @{users} =    Henk    Harry    Herman
+        |  VAR  @{users} =    Alice    Bob    Pekka    Miikka
         |  Cache Store Collection    usernames    @{usernames}    expire_in_seconds=60
         """
         entry = self._store_cache_entry(key, list(values), "COLLECTION", expire_in_seconds)
@@ -330,6 +330,8 @@ class CacheLibrary:
     ) -> None:
         """
         Remove a value from a cached collection.
+
+        Requires `index` or `value`, but not both.
 
         | `key`   | Name of the stored collection    |
         | `index` | Index of the value to be removed |
