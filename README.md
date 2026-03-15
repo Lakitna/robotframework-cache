@@ -1,15 +1,15 @@
 # Robot Framework Cache Library
 
 Caching mechanism for Robot Framework tests. Works within a single test run and across multiple test
-runs. Works with Pabot (requires `--pabotlib`).
+runs. Works with Pabot.
 
 ## Why
 
 In one word: Performance.
 
 When testing, we sometimes want to reuse work we did in a different test. Examples of this include
-API gateway sessions, user sessions, and expensive calculations. If we can reuse this work, we don't
-need to spend time redoing it every test.
+API sessions, user sessions, and expensive calculations. If we can reuse this work, we don't need to
+spend time redoing it every test.
 
 Sometimes we even want to reuse the work we did in a previous test run. This allows us to speed up
 our workflow when writing tests.
@@ -17,19 +17,9 @@ our workflow when writing tests.
 CacheLibrary solves these problems by providing a caching mechanism that's stored both in memory and
 in a file.
 
-## Pabot
+## Keyword documentation
 
-CacheLibrary works with Pabot.
-
-- Pabot @ <2.2.0 is not supported
-- Pabot @ >=2.2.0 and <4 requires the `--pabotlib` command line argument.
-- Pabot @ >=4 won't work with the `--no-pabotlib` command line argument.
-
-Supporting Pabot is achieved by a combination of [locks](https://pabot.org/PabotLib.html#locks)
-and [parallel variables](https://pabot.org/PabotLib.html#valuetransfer). This makes CacheLibrary
-stable when run in parallel without losing stored values.
-
-All CacheLibrary tests are run with Pabot to ensure that the above statements are true.
+For full keyword documentation, see: <https://lakitna.github.io/robotframework-cache>
 
 ## Installation
 
@@ -150,6 +140,72 @@ If you need to reset the cache for any reason, simply remove or empty the cache 
 (default: `robotframework-cache.json`).
 
 Alternatively, you can use the keyword `Cache Reset` for the same purpose.
+
+## Common questions
+
+### What can I cache?
+
+Anything that is JSON serializable.
+
+CacheLibrary uses a JSON file to store data. Because of this, anything you cache must be able to
+fit in a JSON file. In practice, this means that most Robot variables can be stored in the cache.
+
+Supported values include (but are not limited to):
+
+- String
+- Integer
+- Float
+- Boolean
+- Dictionary
+- List
+
+### Should I commit my cache file?
+
+No, you should not commit your cache file. The data in your cache file will become outdated quickly.
+It also makes no sense to review it or to keep a history on it.
+
+It can even be a security issue. For example: If you store session information (like an API token)
+in your cache, you can expose yourself to session highjacking attacks.
+
+### What about Browser storage states?
+
+In [Browser Library](https://robotframework-browser.org/) there is a concept called 'Storage
+States'. At first glance, there is a lot of overlap between CacheLibrary and these storage states.
+Here is a small flowchart to help you choose between the two:
+
+```
+                                           ┌────────────────────────────┐
+┌─────────────────────────────┐            │                            │
+│                             │    Yes     │ Do you only want to store: │
+│ Do you use Browser Library? ├───────────►│ - Browser cookies          │
+│                             │            │ - Browser local storage    │
+└──────────────┬──────────────┘            │                            │
+               │                           └───┬─────────┬──────────────┘
+               │                No             │         │
+            No │     ┌─────────────────────────┘         │ Yes
+               │     │                                   │
+               ▼     ▼                                   ▼
+      ┌──────────────────┐                    ┌─────────────────────┐
+      │                  │                    │                     │
+      │ Use CacheLibrary │                    │ Use Browser Library │
+      │                  │                    │ storage states      │
+      └──────────────────┘                    │                     │
+                                              └─────────────────────┘
+```
+
+### Does CacheLibrary work with Pabot?
+
+CacheLibrary works with Pabot.
+
+- Pabot @ <2.2.0 is not supported
+- Pabot @ >=2.2.0 and <4 requires the `--pabotlib` command line argument.
+- Pabot @ >=4 won't work with the `--no-pabotlib` command line argument.
+
+Supporting Pabot is achieved by a combination of [locks](https://pabot.org/PabotLib.html#locks)
+and [parallel variables](https://pabot.org/PabotLib.html#valuetransfer). This makes CacheLibrary
+stable when run in parallel without losing stored values.
+
+All CacheLibrary tests are run with Pabot to ensure that the above statements are true.
 
 ## Contributing
 
