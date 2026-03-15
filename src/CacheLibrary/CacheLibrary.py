@@ -244,7 +244,8 @@ class CacheLibrary:
 
         |  Cache Store Value    user-session    ${session_token}    expire_in_seconds=60
         """
-        self._store_cache_entry(key, value, "VALUE", expire_in_seconds)
+        entry = self._store_cache_entry(key, value, "VALUE", expire_in_seconds)
+        logger.info(f"Stored value for '{key}'. Expires {entry['expires']}")
 
     @keyword(tags=["collection"])
     def cache_store_collection(
@@ -289,7 +290,10 @@ class CacheLibrary:
         |  VAR  @{users} =    Henk    Harry    Herman
         |  Cache Store Collection    usernames    @{usernames}    expire_in_seconds=60
         """
-        self._store_cache_entry(key, list(values), "COLLECTION", expire_in_seconds)
+        entry = self._store_cache_entry(key, list(values), "COLLECTION", expire_in_seconds)
+        logger.info(
+            f"Stored collection for '{key}' with {len(values)} values. Expires {entry['expires']}",
+        )
 
     def _store_cache_entry(
         self,
@@ -297,7 +301,7 @@ class CacheLibrary:
         value: CacheValue,
         value_type: CacheValueType,
         expire_in_seconds: int | Literal["default"],
-    ) -> None:
+    ) -> CacheEntry:
         if expire_in_seconds == "default":
             expire_in_seconds = self.default_expire_in_seconds
 
@@ -313,6 +317,8 @@ class CacheLibrary:
 
             self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, cache)
         self._store_json_file(self.file_path, cache)
+
+        return cache_entry
 
     @keyword(tags=["collection"])
     def cache_remove_value_from_collection(
