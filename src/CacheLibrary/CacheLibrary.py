@@ -151,9 +151,9 @@ class CacheLibrary:
         Will return a single value from a collection stored in the cache, or `None` if there is no
         value.
 
-        | `key`               | Name of the collection                          |
-        | `pick=first`        | How to pick a value from the collection         |
-        | `remove_value=True` | Should the value be removed from the collection |
+        | `key`               | Name of the collection                                                       |
+        | `pick=first`        | How to pick a value from the collection. Can be 'first', 'last', or 'random' |
+        | `remove_value=True` | Should the value be removed from the collection                              |
 
         = Examples =
 
