@@ -1,13 +1,12 @@
 *** Settings ***
-Library             Collections
-Library             Process
-Library             FakerLibrary
-Library             pabot.PabotLib
-Library             CacheLibrary
+Library         Collections
+Library         Process
+Library         FakerLibrary
+Library         pabot.PabotLib
+Library         CacheLibrary
 
 # Clean up the data created by these tests
-Suite Setup         Run Only Once    Cache Reset
-Suite Teardown      Run On Last Process    Cache Reset
+Suite Setup     Run Only Once    Cache Reset
 
 
 *** Variables ***
