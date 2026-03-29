@@ -3,6 +3,7 @@ Library         Process
 Library         FakerLibrary
 Library         pabot.PabotLib
 Library         CacheLibrary
+Library         ./secret.py
 
 # Clean up the random data created by these tests
 Suite Setup     Run Only Once    Cache Reset
@@ -27,6 +28,21 @@ Store and retrieve random string data
 
         ${retrieved} =    Cache Retrieve value    ${key}
         Should Be Equal    ${retrieved}    ${input}
+    END
+
+Store and retrieve random Secret string data
+    ${supported} =    Is Secret Supported
+    Skip If    not ${supported}    msg=Secrets not supported in current Robot version.
+
+    FOR    ${i}    IN RANGE    ${ITERATIONS}
+        ${len} =    FakerLibrary.Pyint    min_value=1    max_value=100
+        ${key} =    FakerLibrary.Pystr    min_chars=${len}    max_chars=${len}
+        ${input} =    FakerLibrary.Pystr    min_chars=${len}    max_chars=${len}
+        ${input} =    Convert To Secret    ${input}
+        Cache Store value    ${key}    ${input}
+
+        ${retrieved} =    Cache Retrieve value    ${key}
+        Should Be Equal As Secrets    ${retrieved}    ${input}
     END
 
 Store and retrieve random int data
