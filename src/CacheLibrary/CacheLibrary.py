@@ -14,23 +14,6 @@ from robot.libraries.BuiltIn import BuiltIn
 
 from .__version__ import __version__
 
-CacheKey: TypeAlias = str
-CacheValue: TypeAlias = str | bool | int | float | list | dict
-CacheValueType: TypeAlias = Literal["COLLECTION", "VALUE"]
-CACHE_VALUE_TYPES: tuple[CacheValueType, ...] = ("COLLECTION", "VALUE")
-
-
-class CacheEntry(TypedDict):
-    """
-    Base data struct for cache entry
-    """
-
-    value: CacheValue
-    expires: str
-
-
-CacheContents: TypeAlias = dict[CacheValueType, dict[CacheKey, CacheEntry]]
-
 KwName: TypeAlias = str
 KwArgs: TypeAlias = Any
 
