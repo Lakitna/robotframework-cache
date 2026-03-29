@@ -1,7 +1,7 @@
 from typing import Literal, TypeAlias, TypedDict
 
 try:
-    from robot.api.typing import Secret
+    from robot.api.types import Secret  # pyright: ignore[reportRedeclaration]
 except ImportError:
     # Before Robot 7.4
     Secret: TypeAlias = None
