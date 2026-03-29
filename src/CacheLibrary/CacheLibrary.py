@@ -1,18 +1,26 @@
-import json
 import random
-from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Literal, TypeAlias, TypedDict
+from typing import Any, Literal, TypeAlias
 
 from pabot.pabotlib import PabotLib
 from robot.api import logger
 from robot.api.deco import keyword, library
-from robot.errors import RobotError
 from robot.libraries.BuiltIn import BuiltIn
 
 from .__version__ import __version__
+from .cache_file.base import CacheFile
+from .cache_file.json_file import JsonCacheFile
+from .cache_file.pickle_file import PickleCacheFile
+from .constants import (
+    CACHE_VALUE_TYPES,
+    CacheContents,
+    CacheEntry,
+    CacheKey,
+    CacheValue,
+    CacheValueType,
+)
 from .util.lock import lock
 
 KwName: TypeAlias = str
@@ -75,7 +83,7 @@ class CacheLibrary:
     |     RETURN    ${new_token}
     """
 
-    parallel_value_key = "robotframework-cache"
+    cache_file: CacheFile
 
     def __init__(
         self,
@@ -88,10 +96,29 @@ class CacheLibrary:
         | `file_size_warning_bytes`        | Log warning when the cache exceeds this size                                                   |
         | `default_expire_in_seconds=3600` | After how many seconds should a stored value expire. Can be overwritten when a value is stored |
         """  # noqa: D205, E501
-        self.pabotlib = PabotLib()
-        self.file_path = Path(file_path)
         self.file_size_warning_bytes = file_size_warning_bytes
         self.default_expire_in_seconds = default_expire_in_seconds
+        self.pabotlib = PabotLib()
+
+        path = Path(file_path)
+
+        if path.suffix == ".json":
+            self.cache_file = JsonCacheFile(
+                path,
+                self.pabotlib,
+                file_cleanup_handler=self._cleanup_cache,
+            )
+        elif path.suffix == ".pkl":
+            self.cache_file = PickleCacheFile(
+                path,
+                self.pabotlib,
+                file_cleanup_handler=self._cleanup_cache,
+            )
+        else:
+            msg = (
+                f"Unexpected cache file extension '{path.suffix}'. Expected one of '.json', '.pkl'"
+            )
+            raise ValueError(msg)
 
     @keyword(tags=["value"])
     def cache_retrieve_value(self, key: CacheKey) -> CacheValue | None:
@@ -110,12 +137,13 @@ class CacheLibrary:
 
         |  ${session_token} =    Cache Retrieve Value    user-session
         """
-        cache = self._open_cache_file()["VALUE"]
+        cache = self.cache_file.get()
+        cache = self._ensure_complete_cache(cache)["VALUE"]
 
-        if key not in cache:
+        entry = cache.get(key, None)
+        if not entry:
             return None
 
-        entry = cache[key]
         if self._entry_is_expired(entry):
             self.cache_remove_value(key)
             return None
@@ -156,7 +184,8 @@ class CacheLibrary:
 
         |  ${user} =    Cache Retrieve Value From Collection    user-accounts    pick=random    remove_value=${False}
         """  # noqa: E501
-        cache = self._open_cache_file()["COLLECTION"]
+        cache = self.cache_file.get()
+        cache = self._ensure_complete_cache(cache)["COLLECTION"]
 
         if key not in cache:
             return None
@@ -289,19 +318,16 @@ class CacheLibrary:
         if expire_in_seconds == "default":
             expire_in_seconds = self.default_expire_in_seconds
 
-        expires = (datetime.now() + timedelta(seconds=expire_in_seconds)).isoformat()
-        cache_entry: CacheEntry = {
-            "value": value,
-            "expires": expires,
-        }
+        expires = datetime.now() + timedelta(seconds=expire_in_seconds)
+        cache_entry = CacheEntry(
+            value=value,
+            expires=expires.isoformat(),
+        )
 
-        with self._lock("cachelib-edit"):
-            cache = self._open_cache_file()
+        with self.edit_cache() as cache:
             cache[value_type][key] = cache_entry
 
-            self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, cache)
-        self._store_json_file(self.file_path, cache)
-
+            self.cache_file.store(cache)
         return cache_entry
 
     @keyword(tags=["collection"])
@@ -338,21 +364,18 @@ class CacheLibrary:
         |  ${session} =    Cache Retrieve Value From Collection    user-sessions    remove_value=${False}
         |  Cache Remove Value From Collection    user-sessions    value=${session}
         """  # noqa: E501
-        with self._lock("cachelib-edit"):
-            cache = self._open_cache_file()
-            collection_cache = cache["COLLECTION"]
-
-            if key not in collection_cache:
+        with self.edit_cache() as cache:
+            entry = cache["COLLECTION"].get(key, None)
+            if not entry:
                 return
 
-            values = collection_cache[key]["value"]
+            values = entry["value"]
             if not isinstance(values, list):
                 return
 
-            values = self._remove_value_from_collection(key, values, index=index, value=value)
+            self._remove_value_from_collection(key, values, index=index, value=value)
 
-            self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, cache)
-        self._store_json_file(self.file_path, cache)
+            self.cache_file.store(cache)
 
     def _remove_value_from_collection(
         self,
@@ -381,6 +404,10 @@ class CacheLibrary:
                 return col_values
 
         if value is not None:
+            if type(value).__name__ == "Secret":
+                msg = "Removing Secret from collection by value is not supported."
+                raise ValueError(msg)
+
             try:
                 col_values.remove(value)
             except ValueError as e:
@@ -433,15 +460,13 @@ class CacheLibrary:
         key: CacheKey,
         value_type: CacheValueType,
     ) -> None:
-        with self._lock("cachelib-edit"):
-            cache = self._open_cache_file()
-
+        with self.edit_cache() as cache:
             if key not in cache[value_type]:
                 return
 
             del cache[value_type][key]
-            self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, cache)
-        self._store_json_file(self.file_path, cache)
+
+            self.cache_file.store(cache)
 
     @keyword
     def cache_reset(self) -> None:
@@ -449,9 +474,8 @@ class CacheLibrary:
         Remove all values from the cache.
         """
         empty_cache = self._ensure_complete_cache({})
-        with self._lock("cachelib-edit"):
-            self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, empty_cache)
-        self._store_json_file(self.file_path, empty_cache)
+        with self.edit_cache():
+            self.cache_file.store(empty_cache)
 
     @keyword(tags=["value"])
     def run_keyword_and_cache_output(
@@ -535,49 +559,24 @@ class CacheLibrary:
             cache.setdefault(value_type, {})
         return cache
 
-    def _open_cache_file(self) -> CacheContents:
-        shared_cache = self.pabotlib.get_parallel_value_for_key(self.parallel_value_key)
-        # If not set, `shared_cache` will be an empty string.
-        if isinstance(shared_cache, dict):
-            return shared_cache
-
-        cache_file_contents = self._read_json_file(self.file_path)
-
-        file_size = self.file_path.stat().st_size
+    def _cleanup_cache(self, cache: CacheContents) -> CacheContents:
+        file_size = self.cache_file.get_size()
         if file_size > self.file_size_warning_bytes:
             logger.warn(
-                f"Large cache file '{self.file_path}'. File is {round(file_size / 1024, 1)}Kb. "
+                f"Large cache file '{self.cache_file.file_path}'. "
+                f"File is {round(file_size / 1024, 1)}Kb. "
                 "There might be an issue with the caching mechanism.",
             )
 
-        cache_contents: CacheContents = self._ensure_complete_cache({})
-        for value_type, contents in cache_file_contents.items():
+        # Remove expired entries
+        cleaned_cache: CacheContents = self._ensure_complete_cache({})
+        for value_type, contents in cache.items():
             for key, entry in contents.items():
                 if self._entry_is_expired(entry):
                     continue
-                cache_contents[value_type][key] = entry
+                cleaned_cache[value_type][key] = entry
 
-        self.pabotlib.set_parallel_value_for_key(self.parallel_value_key, cache_contents)
-        self._store_json_file(self.file_path, cache_contents)
-        return cache_contents
-
-    def _read_json_file(self, path: Path) -> CacheContents:
-        with self._lock(f"cachelib-file-{path}"):
-            try:
-                with path.open("r", encoding="utf8") as f:
-                    return json.load(f)
-            except (RobotError, KeyboardInterrupt, SystemExit):
-                raise
-            except Exception:  # noqa: BLE001
-                # Reset/create the file
-                empty_cache = self._ensure_complete_cache({})
-                with path.open("w", encoding="utf8") as f:
-                    json.dump(empty_cache, f)
-                return empty_cache
-
-    def _store_json_file(self, path: Path, contents: CacheContents) -> None:
-        with self._lock(f"cachelib-file-{path}"), path.open("w", encoding="utf8") as f:
-            return json.dump(contents, f)
+        return cleaned_cache
 
     def _entry_is_expired(self, entry: CacheEntry) -> bool:
         now = datetime.now()
@@ -585,3 +584,9 @@ class CacheLibrary:
         return (expires - now).total_seconds() < 0
 
     @contextmanager
+    def edit_cache(self):
+        """Lock the cache for editing. Yields recent cache."""
+        with lock(self.pabotlib, "cachelib-edit"):
+            cache = self.cache_file.get()
+            cache = self._ensure_complete_cache(cache)
+            yield cache
