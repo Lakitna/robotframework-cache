@@ -13,6 +13,7 @@ from robot.errors import RobotError
 from robot.libraries.BuiltIn import BuiltIn
 
 from .__version__ import __version__
+from .util.lock import lock
 
 KwName: TypeAlias = str
 KwArgs: TypeAlias = Any
@@ -584,9 +585,3 @@ class CacheLibrary:
         return (expires - now).total_seconds() < 0
 
     @contextmanager
-    def _lock(self, name: str) -> Generator[None, Any, None]:
-        try:
-            self.pabotlib.acquire_lock(name)
-            yield
-        finally:
-            self.pabotlib.release_lock(name)
