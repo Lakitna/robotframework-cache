@@ -102,6 +102,10 @@ class CacheLibrary:
 
         path = Path(file_path)
 
+        if path.is_dir():
+            msg = f"Cache file path must be a file. '{path.resolve().as_posix()}' is a directory."
+            raise ValueError(msg)
+
         if path.suffix == ".json":
             self.cache_file = JsonCacheFile(
                 path,
