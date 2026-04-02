@@ -19,8 +19,8 @@ class CacheFile:
     _process_cache: CacheContents | None = None
     _process_cache_updated: str = ""
 
-    _parallel_value_key_cache = "robotframework-cache"
-    _parallel_value_key_updated = "robotframework-cache-updated"
+    _parallel_value_key_cache = "cachelib-cache"
+    _parallel_value_key_updated = "cachelib-updated"
 
     def __init__(
         self,
@@ -35,17 +35,17 @@ class CacheFile:
 
     def get(self) -> CacheContents:
         """Get the full cache"""
-        process_cache = self._open_from_process_cache()
+        process_cache = self._get_from_process_cache()
         if process_cache:
             return process_cache
 
-        shared_cache = self._open_from_shared_cache()
+        shared_cache = self._get_from_shared_cache()
         if shared_cache:
             return shared_cache
 
-        return self._open_from_file_cache()
+        return self._get_from_file_cache()
 
-    def _open_from_process_cache(self) -> CacheContents | None:
+    def _get_from_process_cache(self) -> CacheContents | None:
         if self._process_cache is None:
             return None
 
@@ -61,7 +61,7 @@ class CacheFile:
 
         return self._process_cache
 
-    def _open_from_shared_cache(self) -> CacheContents | None:
+    def _get_from_shared_cache(self) -> CacheContents | None:
         shared_cache = self._pabotlib.get_parallel_value_for_key(self._parallel_value_key_cache)
 
         if shared_cache == "":
@@ -82,7 +82,7 @@ class CacheFile:
         self._store_in_process_cache(decoded, shared_cache_updated)
         return decoded
 
-    def _open_from_file_cache(self) -> CacheContents:
+    def _get_from_file_cache(self) -> CacheContents:
         cache_contents = self._open_cache_file()
         if not cache_contents:
             return {}

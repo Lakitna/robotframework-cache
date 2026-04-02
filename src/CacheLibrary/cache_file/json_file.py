@@ -17,7 +17,7 @@ class JsonCacheFile(CacheFile):
         decoded = jsonpickle.decode(raw, on_missing="error")  # noqa: S301
 
         if not isinstance(decoded, dict):
-            msg = "Failed to decode .json file"
+            msg = "Failed to decode .json file: " + self.file_path.as_posix()
             raise TypeError(msg)
 
         return cast(CacheContents, decoded)

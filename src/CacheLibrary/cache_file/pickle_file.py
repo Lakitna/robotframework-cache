@@ -16,7 +16,7 @@ class PickleCacheFile(CacheFile):
         decoded = pickle.loads(raw)  # noqa: S301
 
         if not isinstance(decoded, dict):
-            msg = "Failed to decode .pkl file"
+            msg = "Failed to decode .pkl file: " + self.file_path.as_posix()
             raise TypeError(msg)
 
         return cast(CacheContents, decoded)

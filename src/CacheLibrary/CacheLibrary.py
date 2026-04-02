@@ -140,10 +140,10 @@ class CacheLibrary:
         cache = self.cache_file.get()
         cache = self._ensure_complete_cache(cache)["VALUE"]
 
-        entry = cache.get(key, None)
-        if not entry:
+        if key not in cache:
             return None
 
+        entry = cache[key]
         if self._entry_is_expired(entry):
             self.cache_remove_value(key)
             return None
@@ -405,7 +405,10 @@ class CacheLibrary:
 
         if value is not None:
             if type(value).__name__ == "Secret":
-                msg = "Removing Secret from collection by value is not supported."
+                msg = (
+                    "Removing Secret from collection by value is not supported. "
+                    "Remove by index instead"
+                )
                 raise ValueError(msg)
 
             try:
@@ -420,7 +423,7 @@ class CacheLibrary:
             else:
                 return col_values
 
-        msg = "No index and no value. I don't know what value to remove cached collection."
+        msg = "No index and no value. I don't know what to remove from cached collection."
         raise ValueError(msg)
 
     @keyword(tags=["value"])
