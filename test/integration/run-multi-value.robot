@@ -4,25 +4,34 @@ Library         Process
 Library         FakerLibrary
 Library         pabot.PabotLib
 Library         CacheLibrary
+Library         ./secret.py
 
 # Clean up the data created by these tests
 Suite Setup     Run Only Once    Cache Reset
 
 
 *** Variables ***
-${ITERATIONS}                   50
+${ITERATIONS}                                   50
 @{SUPPORTED_PRIMITIVES}
-...                             str
-...                             bool
-...                             int
-...                             float
+...                                             str
+...                                             bool
+...                                             int
+...                                             float
 @{COMPLEX_COLLECTION_TYPES}
-...                             str
-...                             bool
-...                             int
-...                             float
-...                             list
-...                             dict
+...                                             str
+...                                             bool
+...                                             int
+...                                             float
+...                                             list
+...                                             dict
+...                                             Secret
+@{COMPLEX_COLLECTION_TYPES_VALUE_REMOVABLE}
+...                                             str
+...                                             bool
+...                                             int
+...                                             float
+...                                             list
+...                                             dict
 
 
 *** Test Cases ***
@@ -59,7 +68,12 @@ Remove value by index
         ...    set-data-${TEST_NAME}
         ...    pick=first
         ...    remove_value=False
-        Should Be Equal    ${retrieved}    ${value}
+
+        IF    "${value}" == "<secret>"
+            Should Be Equal As Secrets    ${retrieved}    ${value}
+        ELSE
+            Should Be Equal    ${retrieved}    ${value}
+        END
 
         Cache Remove Value From Collection    set-data-${TEST_NAME}    index=0
     END
@@ -71,7 +85,9 @@ Remove value by index
     Should Be Equal    ${retrieved}    ${None}
 
 Remove value by value
-    ${value_set} =    Generate Complex Collection    size=${ITERATIONS}
+    ${value_set} =    Generate Complex Collection
+    ...    size=${ITERATIONS}
+    ...    types=${COMPLEX_COLLECTION_TYPES_VALUE_REMOVABLE}
 
     Cache Store Collection    set-data-${TEST_NAME}    @{value_set}
 
@@ -193,7 +209,7 @@ Store and retrieve random float data
 Store and retrieve random dict data
     ${value_set} =    Create List
     FOR    ${i}    IN RANGE    ${ITERATIONS}
-        ${input} =    FakerLibrary.Pydict    value_types=${SUPPORTED_PRIMITIVES}
+        ${input} =    FakerLibrary.Pydict
         Append To List    ${value_set}    ${input}
     END
     Cache Store Collection    random-dicts    @{value_set}
@@ -206,7 +222,7 @@ Store and retrieve random dict data
 Store and retrieve random list data
     ${value_set} =    Create List
     FOR    ${i}    IN RANGE    ${ITERATIONS}
-        ${input} =    FakerLibrary.Pylist    value_types=${SUPPORTED_PRIMITIVES}
+        ${input} =    FakerLibrary.Pylist
         Append To List    ${value_set}    ${input}
     END
     Cache Store Collection    random-lists    @{value_set}
@@ -220,6 +236,12 @@ Store and retrieve random list data
 *** Keywords ***
 Generate Complex Collection
     [Arguments]    ${size}    ${types}=${COMPLEX_COLLECTION_TYPES}
+    ${supported} =    Is Secret Supported
+    IF    not ${supported}
+        Remove Values From List    ${types}    Secret
+        Log    Not testing Secret. Not supported in current Robot version.    level=WARN
+    END
+
     ${collection} =    Create List
     ${types} =    FakerLibrary.Random Elements    ${types}    length=${size}
 
@@ -236,6 +258,9 @@ Generate Complex Collection
             ${val} =    FakerLibrary.Pylist    value_types=${SUPPORTED_PRIMITIVES}
         ELSE IF    '${type}' == 'dict'
             ${val} =    FakerLibrary.Pydict    value_types=${SUPPORTED_PRIMITIVES}
+        ELSE IF    '${type}' == 'Secret'
+            ${val} =    FakerLibrary.Pystr
+            ${val} =    Convert To Secret    ${val}
         ELSE
             Fail    Unsupported type '${type}'
         END

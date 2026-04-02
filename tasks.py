@@ -118,8 +118,8 @@ def test_acceptance(c: Context):
     _run_multiple_tasks(
         c,
         (
-            test_acceptance_parallel_test_level,
-            test_acceptance_parallel_test_level,
+            test_acceptance_sync,
+            test_acceptance_parallel_suite_level,
             test_acceptance_parallel_test_level,
         ),
     )

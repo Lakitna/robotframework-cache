@@ -70,15 +70,14 @@ token every time you run a test. This can be a great help while making or debugg
 
 ```robotframework
 Get Api Session Token
-    VAR  ${cache_key} =    api-sessions
-    ${cached_token} =    Cache Retrieve value    ${cache_key}
+    ${cached_token} =    Cache Retrieve value    api-sessions
     IF    $cached_token is not $None
         RETURN    ${cached_token}
     END
 
     # Request a new session token
 
-    Cache Store Value    ${cache_key}    ${new_token}
+    Cache Store Value    api-sessions    ${new_token}
     RETURN    ${new_token}
 ```
 
@@ -122,6 +121,14 @@ When importing the library, you can provide an alternative cache file path.
 Library    CacheLibrary    file_path=alternative-cache-file.json
 ```
 
+Cache file paths can have one of the following extensions:
+
+- `.json` (default) - A JSON file. Simple types will be stored as plain JSON. Complex types will be
+  Pickled. See [jsonpickle](https://jsonpickle.github.io/) for more information.
+- `.pkl` - A Pickle file. Pickle is a binary protocol for serializing and de-serializing a Python
+  object structure. See [pickle](https://docs.python.org/3/library/pickle.html) for more
+  information.
+
 ### Cache too big warnings
 
 A big cache file can indicate an issue with CacheLibary or with how it's used. To help you spot
@@ -145,12 +152,14 @@ Alternatively, you can use the keyword `Cache Reset` for the same purpose.
 
 ### What can I cache?
 
-Anything that is JSON serializable.
+Anything that is JSON serializable or Pickleable.
 
-CacheLibrary uses a JSON file to store data. Because of this, anything you cache must be able to
-fit in a JSON file. In practice, this means that most Robot variables can be stored in the cache.
+CacheLibrary uses [jsonpickle](https://jsonpickle.github.io/) to store data. Because of this,
+anything you cache must be supported by [JSON](https://docs.python.org/3/library/json.html) or
+[Pickle](https://docs.python.org/3/library/pickle.html).
 
-Supported values include (but are not limited to):
+In practice, this means that basically all Robot variables can be stored in the cache. Supported
+values include (but are not limited to):
 
 - String
 - Integer
@@ -158,6 +167,8 @@ Supported values include (but are not limited to):
 - Boolean
 - Dictionary
 - List
+- Secret
+- Complex Python objects
 
 ### Should I commit my cache file?
 

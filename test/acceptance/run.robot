@@ -8,7 +8,7 @@ Library     FakerLibrary
 
 *** Variables ***
 ${DEFAULT_EXPIRES_IN_SECONDS}       ${3600}
-${EMPTY_CACHE}                      \{"COLLECTION": \{\}, "VALUE": \{\}\}
+&{EMPTY_CACHE}                      COLLECTION=&{EMPTY}    VALUE=&{EMPTY}
 
 
 *** Test Cases ***
@@ -57,14 +57,16 @@ A04 Resets the cache file when fetching and the cache file is not json
 
     File Should Exist    ${file_cache_path}
     ${contents} =    Get File    ${file_cache_path}
-    Should Be Equal    ${contents}    ${EMPTY_CACHE}
+    Should Be Equal    ${contents}    {}
 
     [Teardown]    Remove File    ${file_cache_path}
 
 A05 Removes expired values from the cache file
     ${file_cache_path} =    Set Variable    robocache-A05.json
 
-    ${cache} =    Create Dictionary    expired_value=123
+    ${cache} =    Create Dictionary
+    ...    retrieved_expired_value=123
+    ...    unretrieved_expired_value=456
     Create Cache File With Content    ${file_cache_path}    ${cache}
     ...    expiration=1970-01-01T00:00:00.000000
 
@@ -72,7 +74,8 @@ A05 Removes expired values from the cache file
 
     File Should Exist    ${file_cache_path}
     ${contents} =    Get File    ${file_cache_path}
-    Should Be Equal    ${contents}    ${EMPTY_CACHE}
+    ${contents} =    Evaluate    json.loads('${contents}')    modules=json
+    Dictionaries Should Be Equal    ${contents}    ${EMPTY_CACHE}
 
     [Teardown]    Remove File    ${file_cache_path}
 
