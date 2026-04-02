@@ -152,7 +152,7 @@ Alternatively, you can use the keyword `Cache Reset` for the same purpose.
 
 ### What can I cache?
 
-Anything that is JSON serializable or Picklable.
+Anything that is JSON serializable or Pickleable.
 
 CacheLibrary uses [jsonpickle](https://jsonpickle.github.io/) to store data. Because of this,
 anything you cache must be supported by [JSON](https://docs.python.org/3/library/json.html) or
