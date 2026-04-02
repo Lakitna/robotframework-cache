@@ -32,19 +32,6 @@ class CacheLibrary:
     """
     Cache values during a Robotframework test run as well as between test runs.
 
-    = Pabot =
-
-    CacheLibrary works with Pabot.
-
-    - Pabot @ <2.2.0 is not supported
-    - Pabot @ >=2.2.0 and <4 requires the `--pabotlib` command line argument.
-    - Pabot @ >=4 won't work with the `--no-pabotlib` command line argument.
-
-    CacheLibrary will even keep its cool when you run many tests that constantly write to the cache.
-    To achieve this, only one test can write to the cache at a time. This does mean that your tests
-    will slow down when you constantly write to the cache. CacheLibrary works best when you
-    write sometimes and read often.
-
     = Examples =
 
     == Basic usage ==
@@ -81,6 +68,19 @@ class CacheLibrary:
     |
     |     Cache Store Value    ${cache_key}    ${new_token}
     |     RETURN    ${new_token}
+
+    = Pabot =
+
+    CacheLibrary works with Pabot.
+
+    - Pabot @ <2.2.0 is not supported
+    - Pabot @ >=2.2.0 and <4 requires the `--pabotlib` command line argument.
+    - Pabot @ >=4 won't work with the `--no-pabotlib` command line argument.
+
+    CacheLibrary will even keep its cool when you run many tests that constantly write to the cache.
+    To achieve this, only one test can write to the cache at a time. This does mean that your tests
+    will slow down when you constantly write to the cache. CacheLibrary works best when you
+    write sometimes and read often.
     """
 
     cache_file: CacheFile
@@ -227,8 +227,8 @@ class CacheLibrary:
         """
         Store a value in the cache.
 
-        The value to be stored must be able to be stored in JSON. Supported values include (but are
-        not limited to):
+        The value must be storable as JSON or Pickle. Supported values include (but are not limited
+        to):
 
         - String
         - Integer
@@ -236,6 +236,8 @@ class CacheLibrary:
         - Boolean
         - Dictionary
         - List
+        - Secret
+        - Complex Python objects
 
         | `key`                       | Name of the value to be stored                 |
         | `value`                     | Value to be stored                             |
@@ -270,7 +272,7 @@ class CacheLibrary:
         """
         Store a collection of values in the cache.
 
-        All values in the collection must be able to be stored in JSON. Supported values include
+        All values in the collection must be storable as JSON or Pickle. Supported values include
         (but are not limited to):
 
         - String
@@ -279,6 +281,8 @@ class CacheLibrary:
         - Boolean
         - Dictionary
         - List
+        - Secret
+        - Complex Python objects
 
         | `key`                       | Name of the collection to be stored                      |
         | `*values`                   | Values to be stored. Can be multiple.                    |

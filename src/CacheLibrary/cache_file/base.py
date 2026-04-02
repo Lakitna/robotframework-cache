@@ -46,6 +46,7 @@ class CacheFile:
         return self._get_from_file_cache()
 
     def _get_from_process_cache(self) -> CacheContents | None:
+        """Get the full cache from the current process' memory. If it exists."""
         if self._process_cache is None:
             return None
 
@@ -62,6 +63,7 @@ class CacheFile:
         return self._process_cache
 
     def _get_from_shared_cache(self) -> CacheContents | None:
+        """Get the full cache from a parallel process. If it exists."""
         shared_cache = self._pabotlib.get_parallel_value_for_key(self._parallel_value_key_cache)
 
         if shared_cache == "":
@@ -83,6 +85,7 @@ class CacheFile:
         return decoded
 
     def _get_from_file_cache(self) -> CacheContents:
+        """Get the full cache from the cache file. Or get an empty cache."""
         cache_contents = self._open_cache_file()
         if not cache_contents:
             return {}
@@ -112,7 +115,7 @@ class CacheFile:
             return empty_cache
 
     def store(self, contents: CacheContents) -> None:
-        """Store contents to the cache file"""
+        """Store the cache"""
         store_id = str(uuid4())
         self._store_in_process_cache(contents, store_id)
 
@@ -121,14 +124,17 @@ class CacheFile:
         self._store_in_file_cache(encoded)
 
     def _store_in_process_cache(self, contents: CacheContents, store_id: str) -> None:
+        """Store the cache to the current process' memory"""
         self._process_cache = contents
         self._process_cache_updated = store_id
 
     def _store_in_shared_cache(self, encoded_contents: bytes, store_id: str) -> None:
+        """Store the cache to pabotlib so parallel processes can get it"""
         self._pabotlib.set_parallel_value_for_key(self._parallel_value_key_cache, encoded_contents)
         self._pabotlib.set_parallel_value_for_key(self._parallel_value_key_updated, store_id)
 
     def _store_in_file_cache(self, encoded_contents: bytes) -> None:
+        """Store the cache in the cache file"""
         with (
             lock(self._pabotlib, f"cachelib-file-{self.file_path}"),
             self.file_path.open("wb") as f,
