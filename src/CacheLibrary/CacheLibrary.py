@@ -216,9 +216,16 @@ class CacheLibrary:
             raise ValueError(msg)
 
         value = values[index]
+
+        collection_size = len(values)
         if remove_value:
             self.cache_remove_value_from_collection(key, index=index)
+            collection_size -= 1
 
+        logger.info(
+            f"{collection_size} values remaining in collection '{key}'. "
+            f"Collection expires {entry['expires']}",
+        )
         return value
 
     @keyword(tags=["value"])
