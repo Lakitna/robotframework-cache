@@ -32,6 +32,23 @@ ${ITERATIONS}                                   50
 ...                                             float
 ...                                             list
 ...                                             dict
+@{FIXED_INCREMENTAL_COLLECTION}
+...                                             111
+...                                             222
+...                                             333
+...                                             444
+...                                             555
+...                                             666
+...                                             777
+...                                             888
+...                                             999
+...                                             000
+...                                             aaa
+...                                             bbb
+...                                             ccc
+...                                             ddd
+...                                             eee
+...                                             fff
 
 
 *** Test Cases ***
@@ -232,6 +249,36 @@ Store and retrieve random list data
         Should Be Equal    ${retrieved}    ${value_set}[${i}]
     END
 
+Pick strategy Pabot - thread 1
+    [Setup]    Acquire Lock    pick_strat_pabot
+    [Template]    Test Template Pabot Pick Strategy
+    ${None}
+    [Teardown]    Release Lock    pick_strat_pabot
+
+Pick strategy Pabot - thread 2
+    [Setup]    Acquire Lock    pick_strat_pabot
+    [Template]    Test Template Pabot Pick Strategy
+    ${None}
+    [Teardown]    Release Lock    pick_strat_pabot
+
+Pick strategy Pabot - thread 3
+    [Setup]    Acquire Lock    pick_strat_pabot
+    [Template]    Test Template Pabot Pick Strategy
+    ${None}
+    [Teardown]    Release Lock    pick_strat_pabot
+
+Pick strategy Pabot - thread 4
+    [Setup]    Acquire Lock    pick_strat_pabot
+    [Template]    Test Template Pabot Pick Strategy
+    ${None}
+    [Teardown]    Release Lock    pick_strat_pabot
+
+Pick strategy Pabot - thread 5
+    [Setup]    Acquire Lock    pick_strat_pabot
+    [Template]    Test Template Pabot Pick Strategy
+    ${None}
+    [Teardown]    Release Lock    pick_strat_pabot
+
 
 *** Keywords ***
 Generate Complex Collection
@@ -269,3 +316,25 @@ Generate Complex Collection
     END
 
     RETURN    ${collection}
+
+Test Template Pabot Pick Strategy
+    [Arguments]    ${_}
+    Cache Store Collection    fixed-strings    @{FIXED_INCREMENTAL_COLLECTION}
+    ${pabot_thread_id} =    Get Variable Value    ${PABOTEXECUTIONPOOLID}    0
+    ${expected_value} =    Get From List    ${FIXED_INCREMENTAL_COLLECTION}    ${pabot_thread_id}
+
+    ${other_tread_id} =    Get Parallel Value For Key    pick_strat_pabot_thread
+    ${other_tread_expected_value} =    Get Parallel Value For Key    pick_strat_pabot_value
+    IF    '${other_tread_expected_value}' == '${EMPTY}'
+        Set Parallel Value For Key    pick_strat_pabot_thread    ${pabot_thread_id}
+        Set Parallel Value For Key    pick_strat_pabot_value    ${expected_value}
+    ELSE IF    ${pabot_thread_id} != ${other_tread_id}
+        Should Not Be Equal As Strings    ${expected_value}    ${other_tread_expected_value}
+    ELSE
+        Should Be Equal As Strings    ${expected_value}    ${other_tread_expected_value}
+    END
+
+    FOR    ${_}    IN RANGE    ${5}
+        ${retrieved} =    Cache Retrieve Value From Collection    fixed-strings    pick=pabot    remove_value=False
+        Should Be Equal    ${retrieved}    ${expected_value}
+    END

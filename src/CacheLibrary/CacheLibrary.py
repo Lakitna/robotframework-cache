@@ -2,7 +2,7 @@ import random
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal, TypeAlias, cast
 
 from pabot.pabotlib import PabotLib
 from robot.api import logger
@@ -158,7 +158,7 @@ class CacheLibrary:
     def cache_retrieve_value_from_collection(
         self,
         key: CacheKey,
-        pick: Literal["first", "last", "random"] = "first",
+        pick: Literal["first", "last", "random", "pabot"] = "first",
         remove_value: bool = True,  # noqa: FBT001, FBT002
     ) -> CacheValue | None:
         """
@@ -211,8 +211,12 @@ class CacheLibrary:
             index = -1
         elif pick == "random":
             index = random.randint(0, len(values) - 1)  # noqa: S311
+        elif pick == "pabot":
+            index = self._pick_strategy_pabot()
         else:
-            msg = f"Unexpected pick '{pick}'. Expected one of 'first', 'last', or 'random'."
+            msg = (
+                f"Unexpected pick '{pick}'. Expected one of 'first', 'last', 'random', or 'pabot'."
+            )
             raise ValueError(msg)
 
         value = values[index]
@@ -220,6 +224,15 @@ class CacheLibrary:
             self.cache_remove_value_from_collection(key, index=index)
 
         return value
+
+    def _pick_strategy_pabot(self) -> int:
+        index = BuiltIn().get_variable_value("${PABOTEXECUTIONPOOLID}", "abc")
+        try:
+            index = int(cast(int, index))
+        except:  # noqa: E722
+            index = 0
+
+        return index
 
     @keyword(tags=["value"])
     def cache_store_value(
