@@ -152,6 +152,7 @@ class CacheLibrary:
             self.cache_remove_value(key)
             return None
 
+        logger.info(f"Value '${key}' expires {entry['expires']}")
         return entry["value"]
 
     @keyword(tags=["collection"])
@@ -223,8 +224,7 @@ class CacheLibrary:
             collection_size -= 1
 
         logger.info(
-            f"{collection_size} values remaining in collection '{key}'. "
-            f"Collection expires {entry['expires']}",
+            f"{collection_size} values remaining. Collection '{key}' expires {entry['expires']}",
         )
         return value
 
