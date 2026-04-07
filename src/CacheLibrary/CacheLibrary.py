@@ -167,15 +167,18 @@ class CacheLibrary:
         Will return a single value from a collection stored in the cache, or `None` if there is no
         value.
 
-        | `key`               | Name of the collection                                                       |
-        | `pick=first`        | How to pick a value from the collection. Can be 'first', 'last', or 'random' |
-        | `remove_value=True` | Should the value be removed from the collection                              |
+        | `key`               | Name of the collection                                                                |
+        | `pick=first`        | How to pick a value from the collection. Can be 'first', 'last', 'random', or 'pabot' |
+        | `remove_value=True` | Should the value be removed from the collection                                       |
 
         = Examples =
 
         == Basic usage ==
 
         Retrieve the first value from a cached collection.
+
+        The value is automatically removed from the collection. Because of this, you will receive a
+        new value every time you use this keyword.
 
         |  ${user} =    Cache Retrieve Value From Collection    user-accounts
 
@@ -187,6 +190,26 @@ class CacheLibrary:
         collection.
 
         |  ${user} =    Cache Retrieve Value From Collection    user-accounts    pick=random    remove_value=${False}
+
+        --------------------
+
+        == Pick pabot process ID ==
+
+        Always retrieve the same value within a pabot process. This ensures that a value is only
+        used once at the same moment in time. The value will be used multiple times, just not at
+        the same time.
+
+        For example, this could be useful when testing an application where a user can only be
+        logged in once. If you log in with two browsers at the same time, the user is logged out in
+        the first browser. Using the `pabot` pick option here will ensure that:
+
+        - A user is only logged in once. It's never used in multiple tests at the same time.
+        - A user is used for multiple tests.
+
+        This works with and without pabot. When you run without pabot, it will pick the first value
+        in the collection.
+
+        |  ${user} =    Cache Retrieve Value From Collection    user-accounts    pick=pabot    remove_value=${False}
         """  # noqa: E501
         cache = self.cache_file.get()
         cache = self._ensure_complete_cache(cache)["COLLECTION"]
