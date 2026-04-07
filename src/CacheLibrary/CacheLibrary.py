@@ -226,9 +226,9 @@ class CacheLibrary:
         return value
 
     def _pick_strategy_pabot(self) -> int:
-        index = BuiltIn().get_variable_value("${PABOTEXECUTIONPOOLID}", "abc")
+        index = BuiltIn().get_variable_value("${PABOTEXECUTIONPOOLID}", 0)
         try:
-            index = int(cast(int, index))
+            index = int(cast(str | int, index))
         except:  # noqa: E722
             index = 0
 
