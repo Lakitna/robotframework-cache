@@ -177,8 +177,8 @@ class CacheLibrary:
 
         Retrieve the first value from a cached collection.
 
-        The value is automatically removed from the collection. Because of this, you will receive a
-        new value every time you use this keyword.
+        The value is automatically removed from the collection. This way you will receive a new
+        value every time you use this keyword.
 
         |  ${user} =    Cache Retrieve Value From Collection    user-accounts
 
@@ -196,15 +196,17 @@ class CacheLibrary:
         == Pick pabot process ID ==
 
         Always retrieve the same value within a pabot process. This ensures that a value is only
-        used once at the same moment in time. The value will be used multiple times, just not at
+        used once at the same moment in time. The value will be used multiple times, just never at
         the same time.
 
-        For example, this could be useful when testing an application where a user can only be
-        logged in once. If you log in with two browsers at the same time, the user is logged out in
-        the first browser. Using the `pabot` pick option here will ensure that:
+        For example, this could be useful in the following scenario:
 
-        - A user is only logged in once. It's never used in multiple tests at the same time.
-        - A user is used for multiple tests.
+        > In the application under test, a user can only have a logged in session in one browser.
+          If you log in from a second browser, the user is logged out in the first browser. The
+          collection contains multiple valid test users.
+
+        Using the `pabot` pick option here will ensure that a user will never log in twice at the
+        same time.
 
         This works with and without pabot. When you run without pabot, it will pick the first value
         in the collection.
