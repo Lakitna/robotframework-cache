@@ -98,23 +98,20 @@ def test_integration(c: Context):
 @task
 def test_integration_sync(c: Context):
     print("Integration tests: Synchronous")
-    c.run("uv run robot --listener RetryFailed --randomize all test/integration")
+    c.run("uv run robot --listener RetryFailed test/integration")
 
 
 @task
 def test_integration_parallel_suite_level(c: Context):
     print("Integration tests: Parallel, Suite level split")
-    c.run("uv run pabot --pabotlib --listener RetryFailed --randomize all test/integration")
+    c.run("uv run pabot --pabotlib --listener RetryFailed test/integration")
 
 
 @task
 def test_integration_parallel_test_level(c: Context):
     print("Integration tests: Parallel, Test level split")
     c.run(
-        "uv run pabot "
-        "--testlevelsplit --pabotlib "
-        "--listener RetryFailed --randomize all "
-        "test/integration",
+        "uv run pabot --testlevelsplit --pabotlib --listener RetryFailed test/integration",
     )
 
 
