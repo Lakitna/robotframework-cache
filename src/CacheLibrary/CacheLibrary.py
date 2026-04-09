@@ -242,7 +242,7 @@ class CacheLibrary:
             index = -1
         elif pick == "random":
             index = random.randint(0, len(values) - 1)  # noqa: S311
-        elif pick == "parallelprocess":
+        elif pick == "parallel process":
             index = self._pick_strategy_parallel_process()
         else:
             msg = (

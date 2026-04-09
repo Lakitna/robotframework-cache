@@ -335,6 +335,9 @@ Test Template Pabot Pick Strategy
     END
 
     FOR    ${_}    IN RANGE    ${5}
-        ${retrieved} =    Cache Retrieve Value From Collection    fixed-strings    pick=pabot    remove_value=False
+        ${retrieved} =    Cache Retrieve Value From Collection
+        ...    fixed-strings
+        ...    pick=parallel process
+        ...    remove_value=False
         Should Be Equal    ${retrieved}    ${expected_value}
     END
