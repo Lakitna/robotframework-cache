@@ -211,13 +211,11 @@ class CacheLibrary:
 
         == Pick parallel process value ==
 
-        Ensure each parallel process uses a different user from a cached collection of users.
+        Ensure each parallel process uses a different user from a cached collection of users. This
+        could be useful in the following scenario:
 
-        This could be useful in the following scenario:
-
-            In the application under test, a user can only have a logged in session in one browser
-            at a time. If you log in from a second browser, the user is logged out in the first
-            browser.
+        In the application under test, a user can only have a logged in session in one browser at a
+        time. If you log in from a second browser, the user is logged out in the first browser.
 
         |  ${user} =    Cache Retrieve Value From Collection    user-accounts    pick=parallel process    remove_value=${False}
         """  # noqa: E501
