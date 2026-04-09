@@ -2,7 +2,7 @@ import random
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Literal, TypeAlias
+from typing import Any, Literal, TypeAlias, cast
 
 from pabot.pabotlib import PabotLib
 from robot.api import logger
@@ -159,7 +159,7 @@ class CacheLibrary:
     def cache_retrieve_value_from_collection(
         self,
         key: CacheKey,
-        pick: Literal["first", "last", "random"] = "first",
+        pick: Literal["first", "last", "random", "parallel process"] = "first",
         remove_value: bool = True,  # noqa: FBT001, FBT002
     ) -> CacheValue | None:
         """
@@ -168,15 +168,34 @@ class CacheLibrary:
         Will return a single value from a collection stored in the cache, or `None` if there is no
         value.
 
-        | `key`               | Name of the collection                                                       |
-        | `pick=first`        | How to pick a value from the collection. Can be 'first', 'last', or 'random' |
-        | `remove_value=True` | Should the value be removed from the collection                              |
+        | `key`               | Name of the collection                                                                           |
+        | `pick=first`        | How to pick a value from the collection. Can be 'first', 'last', 'random', or 'parallel process' |
+        | `remove_value=True` | Should the value be removed from the collection                                                  |
+
+        = Pick strategies =
+
+        - `first`: pick the first value
+        - `last`: pick the last value
+        - `random`: pick a random value
+        - `parallel process`: pick a value unique per parallel process.
+
+        == Pick strategy `parallel process` ==
+
+        With `parallel process`, each parallel process gets its own fixed value, preventing multiple
+        processes from using the same value at the same time. Within a process, the same value is
+        returned on each call.
+
+        Designed to be used with `remove_value=False` and Pabot. When not using Pabot,
+        `parallel process` behaves the same as `first`.
 
         = Examples =
 
         == Basic usage ==
 
         Retrieve the first value from a cached collection.
+
+        The value is automatically removed from the collection. This way you will receive a new
+        value every time you use this keyword.
 
         |  ${user} =    Cache Retrieve Value From Collection    user-accounts
 
@@ -188,6 +207,18 @@ class CacheLibrary:
         collection.
 
         |  ${user} =    Cache Retrieve Value From Collection    user-accounts    pick=random    remove_value=${False}
+
+        --------------------
+
+        == Pick parallel process value ==
+
+        Ensure each parallel process uses a different user from a cached collection of users. This
+        could be useful in the following scenario:
+
+        In the application under test, a user can only have a logged in session in one browser at a
+        time. If you log in from a second browser, the user is logged out in the first browser.
+
+        |  ${user} =    Cache Retrieve Value From Collection    user-accounts    pick=parallel process    remove_value=${False}
         """  # noqa: E501
         cache = self.cache_file.get()
         cache = self._ensure_complete_cache(cache)["COLLECTION"]
@@ -212,8 +243,13 @@ class CacheLibrary:
             index = -1
         elif pick == "random":
             index = random.randint(0, len(values) - 1)  # noqa: S311
+        elif pick == "parallel process":
+            index = self._pick_strategy_parallel_process()
         else:
-            msg = f"Unexpected pick '{pick}'. Expected one of 'first', 'last', or 'random'."
+            msg = (
+                f"Unexpected pick '{pick}'. "
+                "Expected one of 'first', 'last', 'random', or 'parallel process'."
+            )
             raise ValueError(msg)
 
         value = values[index]
@@ -227,6 +263,15 @@ class CacheLibrary:
             f"{collection_size} values remaining. Collection '{key}' expires {entry['expires']}",
         )
         return value
+
+    def _pick_strategy_parallel_process(self) -> int:
+        index = BuiltIn().get_variable_value("${PABOTEXECUTIONPOOLID}", 0)
+        try:
+            index = int(cast(str | int, index))
+        except:  # noqa: E722
+            index = 0
+
+        return index
 
     @keyword(tags=["value"])
     def cache_store_value(

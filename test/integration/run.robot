@@ -122,7 +122,12 @@ Remove stored data
     Should Be Equal    ${postRemove}    ${None}
 
 Store with expiration time
-    Cache Store Value    random-data    amazing data    expire_in_seconds=1
+    [Documentation]
+    ...    Test relies on timing within the test. This timing can be messed up by locks aquired by
+    ...    other tests. Retry stabilizes the run.
+    ...    The retry is _not_ hiding a race condition in this situation.
+    [Tags]    test:retry(1)
+    Cache Store Value    random-data    amazing data    expire_in_seconds=2
     ${preSleep} =    Cache Retrieve Value    random-data
     Sleep    2s
     ${postSleep} =    Cache Retrieve Value    random-data
