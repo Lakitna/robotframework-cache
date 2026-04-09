@@ -158,7 +158,7 @@ class CacheLibrary:
     def cache_retrieve_value_from_collection(
         self,
         key: CacheKey,
-        pick: Literal["first", "last", "random", "pabot"] = "first",
+        pick: Literal["first", "last", "random", "parallel process"] = "first",
         remove_value: bool = True,  # noqa: FBT001, FBT002
     ) -> CacheValue | None:
         """
@@ -167,9 +167,25 @@ class CacheLibrary:
         Will return a single value from a collection stored in the cache, or `None` if there is no
         value.
 
-        | `key`               | Name of the collection                                                                |
-        | `pick=first`        | How to pick a value from the collection. Can be 'first', 'last', 'random', or 'pabot' |
-        | `remove_value=True` | Should the value be removed from the collection                                       |
+        | `key`               | Name of the collection                                                                           |
+        | `pick=first`        | How to pick a value from the collection. Can be 'first', 'last', 'random', or 'parallel process' |
+        | `remove_value=True` | Should the value be removed from the collection                                                  |
+
+        = Pick strategies =
+
+        - `first`: pick the first value
+        - `last`: pick the last value
+        - `random`: pick a random value
+        - `parallel process`: pick a value unique per parallel process.
+
+        == Pick strategy `parallel process` ==
+
+        With `parallel process`, each parallel process gets its own fixed value, preventing multiple
+        processes from using the same value at the same time. Within a process, the same value is
+        returned on each call.
+
+        Designed to be used with `remove_value=False` and Pabot. When not using Pabot,
+        `parallel process` behaves the same as `first`.
 
         = Examples =
 
@@ -193,25 +209,17 @@ class CacheLibrary:
 
         --------------------
 
-        == Pick pabot process ID ==
+        == Pick parallel process value ==
 
-        Always retrieve the same value within a pabot process. This ensures that a value is only
-        used once at the same moment in time. The value will be used multiple times, just never at
-        the same time.
+        Ensure each parallel process uses a different user from a cached collection of users.
 
-        For example, this could be useful in the following scenario:
+        This could be useful in the following scenario:
 
-        > In the application under test, a user can only have a logged in session in one browser.
-          If you log in from a second browser, the user is logged out in the first browser. The
-          collection contains multiple valid test users.
+            In the application under test, a user can only have a logged in session in one browser
+            at a time. If you log in from a second browser, the user is logged out in the first
+            browser.
 
-        Using the `pabot` pick option here will ensure that a user will never log in twice at the
-        same time.
-
-        This works with and without pabot. When you run without pabot, it will pick the first value
-        in the collection.
-
-        |  ${user} =    Cache Retrieve Value From Collection    user-accounts    pick=pabot    remove_value=${False}
+        |  ${user} =    Cache Retrieve Value From Collection    user-accounts    pick=parallel process    remove_value=${False}
         """  # noqa: E501
         cache = self.cache_file.get()
         cache = self._ensure_complete_cache(cache)["COLLECTION"]
@@ -236,11 +244,12 @@ class CacheLibrary:
             index = -1
         elif pick == "random":
             index = random.randint(0, len(values) - 1)  # noqa: S311
-        elif pick == "pabot":
-            index = self._pick_strategy_pabot()
+        elif pick == "parallelprocess":
+            index = self._pick_strategy_parallel_process()
         else:
             msg = (
-                f"Unexpected pick '{pick}'. Expected one of 'first', 'last', 'random', or 'pabot'."
+                f"Unexpected pick '{pick}'. "
+                "Expected one of 'first', 'last', 'random', or 'parallel process'."
             )
             raise ValueError(msg)
 
@@ -250,7 +259,7 @@ class CacheLibrary:
 
         return value
 
-    def _pick_strategy_pabot(self) -> int:
+    def _pick_strategy_parallel_process(self) -> int:
         index = BuiltIn().get_variable_value("${PABOTEXECUTIONPOOLID}", 0)
         try:
             index = int(cast(str | int, index))
