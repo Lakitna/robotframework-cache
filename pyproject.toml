@@ -27,6 +27,7 @@ dev = [
     "invoke (>=2.2.1)",
     # Required for faker <6.0.0
     "setuptools (>=80.0.0,<81.0.0)",
+    "robotframework-retryfailed>=0.2.0",
 ]
 
 [tool.uv.build-backend]

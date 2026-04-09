@@ -313,6 +313,7 @@ dependencies = [
 dev = [
     { name = "invoke" },
     { name = "robotframework-faker" },
+    { name = "robotframework-retryfailed" },
     { name = "robotframework-robocop" },
     { name = "ruff" },
     { name = "setuptools" },
@@ -329,6 +330,7 @@ requires-dist = [
 dev = [
     { name = "invoke", specifier = ">=2.2.1" },
     { name = "robotframework-faker", specifier = ">=5.0.0" },
+    { name = "robotframework-retryfailed", specifier = ">=0.2.0" },
     { name = "robotframework-robocop", specifier = ">=7.0.0,<8.0.0" },
     { name = "ruff", specifier = ">=0.9.1,<0.10.0" },
     { name = "setuptools", specifier = ">=80.0.0,<81.0.0" },
@@ -358,6 +360,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/d6/16/285f1737483a93f7ab38456e97bd34d101a4a9713ba01050fecf51096bef/robotframework_pabot-5.2.2.tar.gz", hash = "sha256:497c3d72551c76eda21029df6a28c6b2ed227e63c4a8510e1c6a0690b9e2be91", size = 106974, upload-time = "2026-02-18T21:04:22.827Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f5/15/f5da87828441f53f5126dda3dd1fdf1fd73b8f5fdf490659b56dd2dc3a80/robotframework_pabot-5.2.2-py3-none-any.whl", hash = "sha256:e7b95d031e9f04b77312b04a1fd835b9791f022b3436b63b507a720bfec05bb4", size = 71801, upload-time = "2026-02-18T21:04:21.313Z" },
+]
+
+[[package]]
+name = "robotframework-retryfailed"
+version = "0.2.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "robotframework" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4b/99/4ffc2253cbff664c93f4fe63663a0d0a68862c7bbe40aea6f324fd371ef3/robotframework-retryfailed-0.2.0.tar.gz", hash = "sha256:c134a924f480e2666916bcb019a7e255d7229bc51a3747e849bd1e7931ed6eb3", size = 7611, upload-time = "2022-10-09T20:13:48.33Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/24/80/144bca38aa894ec876f7943d3fd62fa57d9be937cc0be9e5d7e3df9837e3/robotframework_retryfailed-0.2.0-py3-none-any.whl", hash = "sha256:b389dadb446a4d7356d7e953aabfdf2b0497d51df11d3da80abe9d4a8a0992c3", size = 8638, upload-time = "2022-10-09T20:13:46.396Z" },
 ]
 
 [[package]]
